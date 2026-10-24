@@ -20,7 +20,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/products')
+    fetch('https://organicharvest-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
         setProducts(data);
@@ -35,7 +35,7 @@ function App() {
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka delete karna hai?')) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         alert('Product deleted successfully!');

@@ -22,7 +22,7 @@ export default function TrackOrder() {
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:8080/api/orders/track/${orderNumber.trim()}`);
+      const res = await fetch(`https://organicharvest-backend.onrender.com/api/orders/track/${orderNumber.trim()}`);
       if (!res.ok) throw new Error("Order nahi mila. Kripya sahi Order ID daalein.");
       
       const data = await res.json();
