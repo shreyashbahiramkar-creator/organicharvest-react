@@ -8,7 +8,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/orders');
+      const res = await fetch('https://organicharvest-backend.onrender.com/api/orders');
       const data = await res.json();
       setOrders(data);
     } catch (error) {
@@ -24,7 +24,7 @@ export default function AdminOrders() {
 
     const handleStatusChange = async (id, newStatus) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/orders/${id}/status?status=${newStatus}`, {
+      const response = await fetch(`https://organicharvest-backend.onrender.com/api/orders/${id}/status?status=${newStatus}`, {
         method: 'PUT',
       });
 

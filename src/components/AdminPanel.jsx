@@ -20,7 +20,7 @@ function AdminPanel() {
   // 1. Products Fetch Karein
   const fetchProducts = async () => {
     try {
-      const res = await fetch('http://localhost:8080/api/products');
+      const res = await fetch('https://organicharvest-backend.onrender.com/api/products');
       const data = await res.json();
       setProducts(data);
     } catch (error) {
@@ -47,8 +47,8 @@ function AdminPanel() {
     setMessage('');
 
     const url = editingId 
-      ? `http://localhost:8080/api/products/${editingId}` 
-      : 'http://localhost:8080/api/products';             
+      ? `https://organicharvest-backend.onrender.com/api/products/${editingId}` 
+      : 'https://organicharvest-backend.onrender.com/api/products';             
 
     const method = editingId ? 'PUT' : 'POST';
 
@@ -83,7 +83,7 @@ function AdminPanel() {
     if (!window.confirm('Pakka is product ko delete karna hai?')) return;
     
     try {
-      const res = await fetch(`http://localhost:8080/api/products/${id}`, {
+      const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, {
         method: 'DELETE',
       });
       
