@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 function AdminPanel() {
+  // 🆕 Admin ki Secret Key (Backend se match honi chahiye)
+  const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
+
   // Form State (Stock add kiya)
   const [formData, setFormData] = useState({
     name: '', category: '', price: '', unit: '', image: '', tag: '', stock: ''
@@ -31,8 +34,16 @@ function AdminPanel() {
   };
 
   useEffect(() => {
+    // 🆕 Jab Admin Panel open ho, toh user ko Admin mark kar do
+    localStorage.setItem('isAdmin', 'true');
     fetchProducts();
   }, []);
+
+  // 🆕 Admin Logout Function
+  const handleLogout = () => {
+    localStorage.removeItem('isAdmin');
+    window.location.href = '/'; // Wapas main page par bhej do
+  };
 
   // 2. Input Change Handler
   const handleChange = (e) => {
@@ -55,19 +66,24 @@ function AdminPanel() {
     try {
       const res = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Admin-Key': ADMIN_SECRET_KEY // 🆕 Secret Key add ki
+        },
         body: JSON.stringify({ 
           ...formData, 
           price: parseFloat(formData.price),
-          stock: parseInt(formData.stock) || 0 // 🆕 Stock ko integer mein convert kiya
+          stock: parseInt(formData.stock) || 0 
         }),
       });
 
       if (res.ok) {
         setMessage(editingId ? '✅ Product updated successfully!' : '✅ Product added successfully!');
-        setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); // 🆕 Reset
+        setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
         setEditingId(null); 
         fetchProducts(); 
+      } else if (res.status === 401) {
+        setMessage('❌ Unauthorized! Invalid Admin Key.');
       } else {
         setMessage('❌ Operation failed.');
       }
@@ -85,14 +101,19 @@ function AdminPanel() {
     try {
       const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, {
         method: 'DELETE',
+        headers: {
+          'X-Admin-Key': ADMIN_SECRET_KEY // 🆕 Secret Key add ki
+        }
       });
       
       if (res.ok) {
         setProducts(prev => prev.filter(p => p.id !== id));
         if (editingId === id) {
           setEditingId(null);
-          setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); // 🆕 Reset
+          setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
         }
+      } else if (res.status === 401) {
+        alert('Unauthorized! Aapke paas delete karne ki permission nahi hai.');
       } else {
         alert('Delete failed!');
       }
@@ -111,7 +132,7 @@ function AdminPanel() {
       unit: product.unit,
       image: product.image,
       tag: product.tag || '',
-      stock: product.stock || 0 // 🆕 Stock load kiya
+      stock: product.stock || 0 
     });
     setEditingId(product.id);
     setMessage('');
@@ -121,7 +142,7 @@ function AdminPanel() {
   // Cancel Edit Handler
   const handleCancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); // 🆕 Reset
+    setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
     setMessage('');
   };
 
@@ -132,12 +153,21 @@ function AdminPanel() {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#245b3b]">Admin Dashboard</h1>
-          <Link 
-            to="/" 
-            className="bg-[#245b3b] text-white px-4 py-2 rounded-lg hover:bg-green-800 transition"
-          >
-            ← Back to Store
-          </Link>
+          <div className="flex gap-3">
+            {/* 🆕 Logout Button */}
+            <button 
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+            >
+              Logout Admin
+            </button>
+            <Link 
+              to="/" 
+              className="bg-[#245b3b] text-white px-4 py-2 rounded-lg hover:bg-green-800 transition"
+            >
+              ← Back to Store
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -174,7 +204,7 @@ function AdminPanel() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="Fruits" />
               </div>
 
-              {/* 🆕 3 Columns: Price, Unit, Stock */}
+              {/* 3 Columns: Price, Unit, Stock */}
               <div className="flex gap-2">
                 <div className="w-1/3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Price (₹) *</label>
@@ -228,7 +258,7 @@ function AdminPanel() {
                       <th className="p-3 font-medium">Product</th>
                       <th className="p-3 font-medium">Category</th>
                       <th className="p-3 font-medium">Price</th>
-                      <th className="p-3 font-medium">Stock</th> {/* 🆕 Naya Column */}
+                      <th className="p-3 font-medium">Stock</th> 
                       <th className="p-3 font-medium text-right">Action</th>
                     </tr>
                   </thead>
@@ -242,7 +272,6 @@ function AdminPanel() {
                         <td className="p-3 text-sm text-gray-600">{product.category}</td>
                         <td className="p-3 text-sm font-semibold text-gray-800">₹{product.price}</td>
                         
-                        {/* 🆕 Stock Column Data */}
                         <td className="p-3 text-sm">
                           {product.stock > 0 ? (
                             <span className="text-green-600 font-bold">{product.stock}</span>

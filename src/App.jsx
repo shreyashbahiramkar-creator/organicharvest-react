@@ -11,7 +11,7 @@ import CheckoutModal from './components/CheckoutModal';
 import Toast from './components/Toast'; 
 import AdminPanel from './components/AdminPanel'; 
 import AdminOrders from './components/Admin/AdminOrders';
-import TrackOrder from './components/TrackOrder'; // <-- Naya Import
+import TrackOrder from './components/TrackOrder'; 
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,10 +35,18 @@ function App() {
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka delete karna hai?')) return;
     try {
-      const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
+      const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Key': 'OrganicHarvestAdmin123' // 🆕 Secret Key add ki hai
+        }
+      });
+      
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         alert('Product deleted successfully!');
+      } else if (res.status === 401) {
+        alert('Unauthorized! Aap Admin nahi hain.');
       } else {
         alert('Delete failed!');
       }
@@ -69,12 +77,14 @@ function App() {
             <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <Hero />
             <Category selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+            
+            {/* 🆕 YAHAN SE onDelete={handleDelete} HATA DIYA HAI */}
             <Products 
               filteredProducts={filteredProducts} 
               selectedCategory={selectedCategory} 
               setSelectedCategory={setSelectedCategory} 
-              onDelete={handleDelete} 
             />
+            
             <Contact />
             <Footer />
             <CartDrawer />
@@ -87,7 +97,7 @@ function App() {
         <Route path="/admin" element={<AdminPanel />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
 
-        {/* 🆕 Naya Track Order Route */}
+        {/* Track Order Route */}
         <Route path="/track-order" element={<TrackOrder />} />
       </Routes>
     </>

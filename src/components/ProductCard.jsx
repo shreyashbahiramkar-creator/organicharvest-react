@@ -3,6 +3,9 @@ import { useCart } from '../context/CartContext';
 function ProductCard({ product, onDelete }) {
   const { addToCart } = useCart(); 
 
+  // 🆕 Check kar rahe hain ki user admin hai ya nahi
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+
   // Check karo ki stock available hai ya nahi
   const isOutOfStock = !product.stock || product.stock <= 0;
 
@@ -41,7 +44,7 @@ function ProductCard({ product, onDelete }) {
           {product.name}
         </h3>
 
-        {/* 🆕 Low Stock Warning */}
+        {/* Low Stock Warning */}
         {!isOutOfStock && product.stock <= 5 && (
           <p className="text-red-500 text-[11px] font-bold mb-2">
             Only {product.stock} left in stock!
@@ -53,7 +56,7 @@ function ProductCard({ product, onDelete }) {
             ₹{product.price} <span className="text-[#737b72] text-[11px] font-normal">/ {product.unit}</span>
           </p>
           
-          {/* 🆕 Add to Cart Button Logic */}
+          {/* Add to Cart Button Logic */}
           {isOutOfStock ? (
             <button 
               disabled
@@ -72,15 +75,18 @@ function ProductCard({ product, onDelete }) {
           )}
         </div>
 
-        {/* 🗑️ Delete Button (Testing ke liye) */}
-        <div className="mt-4 pt-3 border-t border-[#e6e8df] flex justify-end">
-          <button 
-            onClick={() => onDelete(product.id)}
-            className="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1"
-          >
-            🗑️ Delete
-          </button>
-        </div>
+        {/* 🗑️ Delete Button (Sirf Admin ke liye) */}
+        {/* 🆕 Yahan condition laga di hai: Agar onDelete function hai AUR user admin hai, tabhi dikhega */}
+        {onDelete && isAdmin && (
+          <div className="mt-4 pt-3 border-t border-[#e6e8df] flex justify-end">
+            <button 
+              onClick={() => onDelete(product.id)}
+              className="text-red-500 hover:text-red-700 text-xs font-semibold flex items-center gap-1"
+            >
+              🗑️ Delete
+            </button>
+          </div>
+        )}
 
       </div>
 
