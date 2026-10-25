@@ -22,6 +22,18 @@ function Category({ selectedCategory, setSelectedCategory }) {
     }
   ];
 
+  // 🆕 Naya Function: Click karne par filter + scroll
+  const handleCategoryClick = (categoryName) => {
+    // 1. Category set karo (agar pehle se selected hai toh unselect kar do)
+    setSelectedCategory(selectedCategory === categoryName ? '' : categoryName);
+    
+    // 2. Products section tak smooth scroll karo
+    const productsSection = document.getElementById('products');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <section id="categories" className="max-w-[1200px] mx-auto px-4 md:px-6 py-12 md:py-16 scroll-mt-20">
       
@@ -43,7 +55,8 @@ function Category({ selectedCategory, setSelectedCategory }) {
         {categories.map((cat, index) => (
           <div 
             key={index} 
-            onClick={() => setSelectedCategory(selectedCategory === cat.name ? '' : cat.name)}
+            // 🆕 Yahan onClick change kiya hai
+            onClick={() => handleCategoryClick(cat.name)}
             className="group block cursor-pointer"
           >
             <div className={`overflow-hidden rounded-[18px] bg-[#f6f6f0] border-2 transition-colors ${selectedCategory === cat.name ? 'border-[#245b3b]' : 'border-transparent'}`}>
