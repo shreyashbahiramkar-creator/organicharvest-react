@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 function AdminPanel() {
-  // 🆕 Admin ki Secret Key (Backend se match honi chahiye)
+  // Admin ki Secret Key (Backend se match honi chahiye)
   const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
 
   // Form State (Stock add kiya)
@@ -12,6 +12,9 @@ function AdminPanel() {
   
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 🆕 Bulk Upload State
+  const [bulkData, setBulkData] = useState('');
 
   // Products List State
   const [products, setProducts] = useState([]);
@@ -34,12 +37,12 @@ function AdminPanel() {
   };
 
   useEffect(() => {
-    // 🆕 Jab Admin Panel open ho, toh user ko Admin mark kar do
+    // Jab Admin Panel open ho, toh user ko Admin mark kar do
     localStorage.setItem('isAdmin', 'true');
     fetchProducts();
   }, []);
 
-  // 🆕 Admin Logout Function
+  // Admin Logout Function
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
     window.location.href = '/'; // Wapas main page par bhej do
@@ -68,7 +71,7 @@ function AdminPanel() {
         method: method,
         headers: { 
           'Content-Type': 'application/json',
-          'X-Admin-Key': ADMIN_SECRET_KEY // 🆕 Secret Key add ki
+          'X-Admin-Key': ADMIN_SECRET_KEY 
         },
         body: JSON.stringify({ 
           ...formData, 
@@ -102,7 +105,7 @@ function AdminPanel() {
       const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, {
         method: 'DELETE',
         headers: {
-          'X-Admin-Key': ADMIN_SECRET_KEY // 🆕 Secret Key add ki
+          'X-Admin-Key': ADMIN_SECRET_KEY 
         }
       });
       
@@ -146,6 +149,47 @@ function AdminPanel() {
     setMessage('');
   };
 
+  // 🆕 6. Bulk Upload Handler
+  const handleBulkUpload = async () => {
+    if (!bulkData.trim()) {
+      alert('Please paste JSON data first.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const parsedData = JSON.parse(bulkData);
+      if (!Array.isArray(parsedData)) {
+        alert('Data ek array ( [ ] ) format me hona chahiye!');
+        setIsSubmitting(false);
+        return;
+      }
+
+      const res = await fetch('https://organicharvest-backend.onrender.com/api/products/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Key': ADMIN_SECRET_KEY
+        },
+        body: JSON.stringify(parsedData)
+      });
+
+      if (res.ok) {
+        alert('✅ Bulk products added successfully!');
+        setBulkData(''); // Textarea clear karo
+        fetchProducts(); // List refresh karo
+      } else if (res.status === 401) {
+        alert('❌ Unauthorized! Invalid Admin Key.');
+      } else {
+        alert('❌ Failed to add bulk products.');
+      }
+    } catch (err) {
+      alert('❌ Invalid JSON format! Please check your data.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-6xl mx-auto">
@@ -154,7 +198,6 @@ function AdminPanel() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#245b3b]">Admin Dashboard</h1>
           <div className="flex gap-3">
-            {/* 🆕 Logout Button */}
             <button 
               onClick={handleLogout}
               className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
@@ -172,7 +215,7 @@ function AdminPanel() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Left Side: Add/Edit Product Form */}
+          {/* Left Side: Add/Edit Product Form & Bulk Upload */}
           <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-md h-fit">
             <div className="flex justify-between items-center border-b pb-2 mb-4">
               <h2 className="text-xl font-semibold text-gray-800">
@@ -204,7 +247,6 @@ function AdminPanel() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="Fruits" />
               </div>
 
-              {/* 3 Columns: Price, Unit, Stock */}
               <div className="flex gap-2">
                 <div className="w-1/3">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Price (₹) *</label>
@@ -240,6 +282,30 @@ function AdminPanel() {
                 {isSubmitting ? 'Processing...' : (editingId ? 'Update Product' : '+ Add Product')}
               </button>
             </form>
+
+            {/* 🆕 BULK UPLOAD SECTION */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">Bulk Upload Products</h2>
+              <p className="text-xs text-gray-500 mb-3">Paste JSON array of products here.</p>
+              
+              <textarea 
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                rows="5"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono mb-3 focus:outline-none focus:ring-2 focus:ring-[#245b3b]"
+                placeholder='[{"name":"Apple","category":"Fruits","price":100,"unit":"1 kg","stock":50,"image":"url"}]'
+              ></textarea>
+
+              <button 
+                type="button"
+                onClick={handleBulkUpload}
+                disabled={isSubmitting}
+                className="w-full bg-purple-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-purple-700 transition disabled:opacity-50"
+              >
+                {isSubmitting ? 'Uploading...' : 'Upload Bulk Products'}
+              </button>
+            </div>
+
           </div>
 
           {/* Right Side: Products List */}
