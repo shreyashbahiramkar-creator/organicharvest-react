@@ -30,8 +30,8 @@ function CartNotification() {
       <style>
         {`
           @keyframes slideUpNotif {
-            from { transform: translate(-50%, 100%); opacity: 0; }
-            to { transform: translate(-50%, 0); opacity: 1; }
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
           }
           .animate-slide-up-notif {
             animation: slideUpNotif 0.3s ease-out forwards;
@@ -39,7 +39,8 @@ function CartNotification() {
         `}
       </style>
 
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] w-[92%] max-w-[420px] animate-slide-up-notif">
+      {/* 🆕 FIX: inset-x-0 aur mx-auto se mobile par perfect center ho jayega */}
+      <div className="fixed bottom-4 inset-x-0 mx-auto z-[9999] w-[92%] max-w-[420px] animate-slide-up-notif">
         <div className="bg-[#ff3269] text-white rounded-full flex items-center justify-between p-2 pl-4 pr-2 shadow-[0_8px_20px_rgba(255,50,105,0.4)]">
           
           {/* Left: Icon + Info */}
