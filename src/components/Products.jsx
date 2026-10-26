@@ -1,9 +1,16 @@
+import { useState } from 'react'; // 🆕 useState import kiya
 import ProductCard from './ProductCard';
-import Category from './Category'; // Sidebar import kiya
+import Category from './Category'; 
+import ProductQuickView from './ProductQuickView'; // 🆕 Quick View Modal import kiya
 
-function Products({ filteredProducts, selectedCategory, setSelectedCategory, onDelete }) {
+// 🆕 allProducts prop add kiya (Frequently Bought Together ke liye)
+function Products({ filteredProducts, selectedCategory, setSelectedCategory, onDelete, allProducts }) {
+  
+  // 🆕 Modal State (Konsa product open hai)
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   return (
-    <section className="bg-white min-h-screen" id="products">
+    <section className="bg-white min-h-screen relative" id="products">
       {/* Main Container: Flexbox for Sidebar + Content */}
       <div className="max-w-[1400px] mx-auto flex items-start">
         
@@ -63,19 +70,13 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
               </button>
             </div>
           ) : (
-            /* 
-              Responsive Grid:
-              Mobile: 2 columns
-              Tablet: 3 columns
-              Laptop: 4 columns
-              Large Screen: 5 columns
-            */
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
               {filteredProducts.map((product) => (
                 <ProductCard 
                   key={product.id} 
                   product={product} 
                   onDelete={onDelete} 
+                  onProductClick={(p) => setSelectedProduct(p)} // 🆕 Click handler pass kiya
                 />
               ))}
             </div>
@@ -83,6 +84,15 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
 
         </div>
       </div>
+
+      {/* 🆕 Product Quick View Modal (Jab koi product click ho toh open hoga) */}
+      {selectedProduct && (
+        <ProductQuickView 
+          product={selectedProduct} 
+          allProducts={allProducts || filteredProducts} // Recommendations ke liye saare products
+          onClose={() => setSelectedProduct(null)} 
+        />
+      )}
     </section>
   );
 }

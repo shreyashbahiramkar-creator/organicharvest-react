@@ -12,7 +12,7 @@ import AdminPanel from './components/AdminPanel';
 import AdminOrders from './components/Admin/AdminOrders';
 import TrackOrder from './components/TrackOrder'; 
 import CartNotification from './components/CartNotification'; 
-import ScrollToTop from './components/ScrollToTop'; // 🆕 Scroll to Top import kiya
+import ScrollToTop from './components/ScrollToTop'; 
 
 function App() {
   // State Variables
@@ -20,7 +20,7 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false); // 🆕 Error state add ki
+  const [error, setError] = useState(false); 
 
   // API Call
   useEffect(() => {
@@ -35,7 +35,7 @@ function App() {
       })
       .catch(err => {
         console.error("Error fetching data:", err);
-        setError(true); // 🆕 Error set kiya
+        setError(true); 
         setLoading(false);
       });
   }, []);
@@ -74,7 +74,7 @@ function App() {
     return matchesSearch && matchesCategory;
   });
 
-  // 🆕 Loading State (Skeleton Loader)
+  // Loading State (Skeleton Loader)
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fffefa] p-4 md:p-8">
@@ -98,7 +98,7 @@ function App() {
     );
   }
 
-  // 🆕 Error State (Agar backend down ho)
+  // Error State (Agar backend down ho)
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffefa] px-4">
@@ -120,12 +120,13 @@ function App() {
       <Routes>
         {/* Main Storefront Route */}
         <Route path="/" element={
-          <div className="min-h-screen bg-[#fffefa] relative pb-24"> {/* pb-24 add kiya taaki notification footer ko na dhake */}
+          <div className="min-h-screen bg-[#fffefa] relative pb-24"> 
             <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <Hero />
             
             <Products 
               filteredProducts={filteredProducts} 
+              allProducts={products} // 🆕 Ye line add ki hai (Frequently Bought Together ke liye)
               selectedCategory={selectedCategory} 
               setSelectedCategory={setSelectedCategory} 
               // onDelete={handleDelete} // Agar main page se delete chahiye toh isko uncomment karein
@@ -134,10 +135,10 @@ function App() {
             <Contact />
             <Footer />
             
-            {/* 🆕 Scroll to Top Button */}
+            {/* Scroll to Top Button */}
             <ScrollToTop />
             
-            {/* 🆕 Temporary Cart Notification */}
+            {/* Temporary Cart Notification */}
             <CartNotification />
             
             <CartDrawer />
