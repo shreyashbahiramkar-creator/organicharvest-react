@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { optimizeImage } from '../utils/imageOptimizer';
 
-function ProductQuickView({ product, allProducts, onClose }) {
+// 🆕 onProductSelect prop add kiya (Recursive modal ke liye)
+function ProductQuickView({ product, allProducts, onClose, onProductSelect, setSelectedCategory }) {
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   
-  // 🆕 Variants State (Agar backend se variants nahi aa rahe, toh hum default bana lenge)
+  // Variants State
   const defaultVariants = [
     { unit: '250 g', price: Math.round(product.price * 0.6), originalPrice: product.originalPrice ? Math.round(product.originalPrice * 0.6) : null },
     { unit: '500 g', price: product.price, originalPrice: product.originalPrice },
@@ -13,15 +14,19 @@ function ProductQuickView({ product, allProducts, onClose }) {
   ];
   
   const variants = product.variants || defaultVariants;
-  const [selectedVariant, setSelectedVariant] = useState(variants[1] || variants[0]); // Default 500g ya first variant
+  const [selectedVariant, setSelectedVariant] = useState(variants[1] || variants[0]);
 
-  // 🆕 Recommended Products (Same category ke baaki products)
+  // 🆕 Jab product change ho (recommendation se), toh variant reset ho jaye
+  useEffect(() => {
+    setSelectedVariant(variants[1] || variants[0]);
+  }, [product.id]);
+
+  // 🆕 Recommended Products (Saare same category ke products, 10 tak)
   const recommendedProducts = allProducts
     .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4); // Max 4 dikhayenge
+    .slice(0, 10); 
 
   // Cart check for this specific variant
-  // Note: Hum id ko variant ke saath combine kar rahe hain taaki 250g aur 500g alag treat hon
   const variantId = `${product.id}-${selectedVariant.unit.replace(/\s/g, '')}`;
   const cartItem = cart?.find(item => item.id === variantId);
   const quantity = cartItem ? cartItem.quantity : 0;
@@ -30,7 +35,7 @@ function ProductQuickView({ product, allProducts, onClose }) {
   const handleAddToCart = () => {
     const productToAdd = {
       ...product,
-      id: variantId, // Unique ID for variant
+      id: variantId,
       price: selectedVariant.price,
       originalPrice: selectedVariant.originalPrice,
       unit: selectedVariant.unit,
@@ -58,8 +63,8 @@ function ProductQuickView({ product, allProducts, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4">
-      {/* Modal Container */}
-      <div className="bg-white w-full max-w-4xl rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto relative animate-slide-up">
+      {/* Modal Container - Explicitly white background for light mode */}
+      <div className="bg-white text-gray-900 w-full max-w-4xl rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto relative animate-slide-up shadow-2xl">
         
         {/* Close Button */}
         <button 
@@ -88,12 +93,11 @@ function ProductQuickView({ product, allProducts, onClose }) {
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h2>
               <p className="text-gray-500 text-sm mb-4">{product.category}</p>
               
-              {/* Description */}
               <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                 {product.description || `Fresh and high-quality ${product.name.toLowerCase()} sourced directly from local farms. Perfect for your daily kitchen needs.`}
               </p>
 
-              {/* Variants Selector */}
+              {/* 🆕 Variants Selector (Price ke saath) */}
               <div className="mb-6">
                 <h3 className="text-sm font-bold text-gray-800 mb-2">Select Quantity</h3>
                 <div className="flex gap-2 flex-wrap">
@@ -101,13 +105,14 @@ function ProductQuickView({ product, allProducts, onClose }) {
                     <button
                       key={i}
                       onClick={() => setSelectedVariant(v)}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all ${
+                      className={`flex flex-col items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold border-2 transition-all min-w-[80px] ${
                         selectedVariant.unit === v.unit 
                           ? 'border-[#245b3b] bg-[#eaf0e5] text-[#245b3b]' 
                           : 'border-gray-200 text-gray-600 hover:border-gray-300'
                       }`}
                     >
-                      {v.unit}
+                      <span>{v.unit}</span>
+                      <span className="text-xs font-bold mt-1">₹{v.price}</span>
                     </button>
                   ))}
                 </div>
@@ -146,21 +151,44 @@ function ProductQuickView({ product, allProducts, onClose }) {
             </div>
           </div>
 
-          {/* 🆕 Frequently Bought Together / Recommended */}
+          {/* 🆕 Frequently Bought Together (Functional) */}
           {recommendedProducts.length > 0 && (
             <div className="mt-10 pt-6 border-t border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Frequently Bought Together</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Frequently Bought Together</h3>
+                {/* 🆕 View All Button */}
+                <button 
+                  onClick={() => {
+                    setSelectedCategory(product.category);
+                    onClose();
+                  }}
+                  className="text-sm font-bold text-[#245b3b] hover:underline"
+                >
+                  View All →
+                </button>
+              </div>
+              
               <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                 {recommendedProducts.map(rec => (
-                  <div key={rec.id} className="min-w-[140px] md:min-w-[160px] bg-white border border-gray-100 rounded-xl p-2 cursor-pointer hover:shadow-md transition-shadow"
-                       onClick={() => {
-                         // Yahan hum parent ko bata sakte hain ki naya product open karna hai
-                         // Filhal ke liye hum simply onClose karke alert kar rahe hain
-                         onClose(); 
-                       }}>
+                  <div 
+                    key={rec.id} 
+                    className="min-w-[150px] md:min-w-[180px] bg-white border border-gray-100 rounded-xl p-2 cursor-pointer hover:shadow-md transition-shadow relative group"
+                    onClick={() => onProductSelect(rec)} // 🆕 Click karne par naya modal khulega
+                  >
                     <img src={optimizeImage(rec.image, 200, 200)} alt={rec.name} className="w-full aspect-square object-cover rounded-lg mb-2" />
                     <p className="text-xs font-bold text-gray-800 line-clamp-1">{rec.name}</p>
                     <p className="text-xs text-gray-500 mt-1">₹{rec.price}</p>
+                    
+                    {/* 🆕 Recommendation Card par ADD button */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Modal open hone se roke
+                        addToCart(rec);
+                      }}
+                      className="absolute bottom-12 right-2 bg-white text-[#ff3269] border border-[#ff3269] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-pink-50 active:scale-90 transition-all"
+                    >
+                      ADD
+                    </button>
                   </div>
                 ))}
               </div>

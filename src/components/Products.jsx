@@ -1,12 +1,11 @@
-import { useState } from 'react'; // 🆕 useState import kiya
+import { useState } from 'react'; 
 import ProductCard from './ProductCard';
 import Category from './Category'; 
-import ProductQuickView from './ProductQuickView'; // 🆕 Quick View Modal import kiya
+import ProductQuickView from './ProductQuickView'; 
 
-// 🆕 allProducts prop add kiya (Frequently Bought Together ke liye)
 function Products({ filteredProducts, selectedCategory, setSelectedCategory, onDelete, allProducts }) {
   
-  // 🆕 Modal State (Konsa product open hai)
+  // Modal State (Konsa product open hai)
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   return (
@@ -76,7 +75,7 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
                   key={product.id} 
                   product={product} 
                   onDelete={onDelete} 
-                  onProductClick={(p) => setSelectedProduct(p)} // 🆕 Click handler pass kiya
+                  onProductClick={(p) => setSelectedProduct(p)} 
                 />
               ))}
             </div>
@@ -85,12 +84,14 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
         </div>
       </div>
 
-      {/* 🆕 Product Quick View Modal (Jab koi product click ho toh open hoga) */}
+      {/* 🆕 Product Quick View Modal (Recursive + View All functionality) */}
       {selectedProduct && (
         <ProductQuickView 
           product={selectedProduct} 
-          allProducts={allProducts || filteredProducts} // Recommendations ke liye saare products
+          allProducts={allProducts || filteredProducts} 
           onClose={() => setSelectedProduct(null)} 
+          onProductSelect={(newProduct) => setSelectedProduct(newProduct)} // 🆕 Recommended product click hone par naya modal
+          setSelectedCategory={setSelectedCategory} // 🆕 View All ke liye
         />
       )}
     </section>
