@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom'; // <-- Naya Import
+import { Link } from 'react-router-dom'; 
 
 function CheckoutModal() {
   const { cart, cartTotal, isCheckoutOpen, closeCheckout, clearCart, showToast } = useCart();
@@ -18,17 +18,28 @@ function CheckoutModal() {
     e.preventDefault();
     setIsLoading(true);
 
+    // 🆕 Payload ko backend ke hisaab se format karo
     const orderPayload = {
       customerName: formData.name,
       phone: formData.phone,
       address: formData.address,
-      items: cart.map(item => ({
-        productId: item.id,
-        productName: item.name,
-        price: item.price,
-        quantity: item.quantity
-      }))
+      totalAmount: cartTotal, // Agar backend 'total' expect karta hai toh yahan 'total' kar dena
+      items: cart.map(item => {
+        // ID ko split karo
+        const originalProductId = item.id.toString().split('-')[0];
+        
+        return {
+          // Agar backend String ID expect kar raha hai toh Number() hata dein
+          productId: Number(originalProductId), 
+          productName: item.name,
+          price: item.price,
+          quantity: item.quantity
+        };
+      })
     };
+
+    // 🆕 Console mein payload print karo taaki aap dekh sakein kya bhej rahe hain
+    console.log("Sending Payload:", orderPayload);
 
     try {
       const response = await fetch('https://organicharvest-backend.onrender.com/api/orders', {
@@ -37,11 +48,16 @@ function CheckoutModal() {
         body: JSON.stringify(orderPayload)
       });
 
-      if (!response.ok) throw new Error('Order place nahi ho paya');
+      if (!response.ok) {
+        // 🆕 Backend ka exact error message nikaalo
+        const errorText = await response.text();
+        console.error("Backend Error Response:", errorText);
+        throw new Error(`Server Error (${response.status}): ${errorText || 'Check console for details'}`);
+      }
 
       const data = await response.json();
       
-      setOrderId(data.orderNumber); 
+      setOrderId(data.orderNumber || data.id || 'ORD-' + Date.now()); 
       setIsOrdered(true);
       clearCart();
       showToast("Order placed successfully!");
@@ -95,7 +111,6 @@ function CheckoutModal() {
               </div>
             </div>
 
-            {/* 🆕 Naya Button: Track Order */}
             <Link 
               to={`/track-order?orderId=${orderId}`}
               onClick={handleClose}
