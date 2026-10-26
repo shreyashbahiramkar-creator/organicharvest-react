@@ -1,8 +1,13 @@
+import { useState, memo } from 'react'; // 🆕 useState aur memo import kiya
 import { useCart } from '../context/CartContext'; 
+import { optimizeImage } from '../utils/imageOptimizer'; // 🆕 Image Optimizer import kiya
 
 function ProductCard({ product, onDelete }) {
   // 🆕 Context se cart aur update functions nikaale
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart(); 
+
+  // 🆕 Image loading state (Skeleton ke liye)
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // 🆕 Check kar rahe hain ki user admin hai ya nahi
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -28,15 +33,25 @@ function ProductCard({ product, onDelete }) {
       
       {/* Image Area */}
       <div className="relative overflow-hidden bg-[#f8f8f8] aspect-square">
+        
+        {/* 🆕 Skeleton Loader (Image load hone tak dikhega) */}
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        )}
+
         <img 
-          src={product.image} 
+          src={optimizeImage(product.image, 400, 400)} // 🆕 Optimized URL use kiya
           alt={product.name} 
           loading="lazy"
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${isOutOfStock ? 'opacity-60 grayscale-[50%]' : ''}`}
+          decoding="async" // 🆕 Background mein decode karega
+          onLoad={() => setImageLoaded(true)} // 🆕 Load hone par skeleton hatao
+          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-300 
+            ${isOutOfStock ? 'opacity-60 grayscale-[50%]' : ''} 
+            ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} // 🆕 Smooth fade-in
         />
         
         {/* Out of Stock Overlay */}
-        {isOutOfStock && (
+        {isOutOfStock && imageLoaded && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
             <span className="bg-white text-red-600 px-3 py-1.5 rounded-lg font-bold text-xs shadow-lg">
               Out of Stock
@@ -119,4 +134,5 @@ function ProductCard({ product, onDelete }) {
   );
 }
 
-export default ProductCard;
+// 🆕 React.memo se unnecessary re-renders rokta hai (Fast scroll ke liye)
+export default memo(ProductCard);
