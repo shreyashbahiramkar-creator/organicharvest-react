@@ -120,19 +120,24 @@ function App() {
       <Routes>
         {/* Main Storefront Route */}
         <Route path="/" element={
-          <div className="min-h-screen bg-[#fffefa] relative pb-24"> 
+          // 🆕 pb-24 hataya, flex flex-col add kiya
+          <div className="min-h-screen bg-[#fffefa] relative flex flex-col"> 
             <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <Hero />
             
-            <Products 
-              filteredProducts={filteredProducts} 
-              allProducts={products} // 🆕 Ye line add ki hai (Frequently Bought Together ke liye)
-              selectedCategory={selectedCategory} 
-              setSelectedCategory={setSelectedCategory} 
-              // onDelete={handleDelete} // Agar main page se delete chahiye toh isko uncomment karein
-            />
+            {/* 🆕 flex-grow add kiya taaki ye bachi hui jagah le le aur footer niche rahe */}
+            <div className="flex-grow">
+              <Products 
+                filteredProducts={filteredProducts} 
+                allProducts={products} 
+                selectedCategory={selectedCategory} 
+                setSelectedCategory={setSelectedCategory} 
+                // onDelete={handleDelete} 
+              />
+              <Contact />
+            </div>
             
-            <Contact />
+            {/* 🆕 Footer ab hamesha bottom par rahega */}
             <Footer />
             
             {/* Scroll to Top Button */}
