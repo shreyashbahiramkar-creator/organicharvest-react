@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import Category from './components/Category';
+// ❌ Category import hata diya hai kyunki ab wo Products ke andar hai
+// import Category from './components/Category'; 
 import Products from './components/Products';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -38,7 +39,7 @@ function App() {
       const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, { 
         method: 'DELETE',
         headers: {
-          'X-Admin-Key': 'OrganicHarvestAdmin123' // 🆕 Secret Key add ki hai
+          'X-Admin-Key': 'OrganicHarvestAdmin123' 
         }
       });
       
@@ -76,13 +77,15 @@ function App() {
           <div className="min-h-screen bg-[#fffefa]">
             <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             <Hero />
-            <Category selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
             
-            {/* 🆕 YAHAN SE onDelete={handleDelete} HATA DIYA HAI */}
+            {/* ❌ Yahan se <Category /> hata diya hai. Ab ye Products.jsx ke andar sidebar ban kar aayega. */}
+            
             <Products 
               filteredProducts={filteredProducts} 
               selectedCategory={selectedCategory} 
               setSelectedCategory={setSelectedCategory} 
+              // Agar aap chahte hain ki Admin main page se bhi delete kar sake, toh niche wali line uncomment kar dein:
+              // onDelete={handleDelete} 
             />
             
             <Contact />
