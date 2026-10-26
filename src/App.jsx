@@ -11,16 +11,16 @@ import Toast from './components/Toast';
 import AdminPanel from './components/AdminPanel'; 
 import AdminOrders from './components/Admin/AdminOrders';
 import TrackOrder from './components/TrackOrder'; 
-import FloatingCart from './components/FloatingCart'; // 🆕 Floating Cart Import
+import CartNotification from './components/CartNotification'; // 🆕 FloatingCart ki jagah CartNotification import kiya
 
 function App() {
-  // 🆕 State Variables (Ye missing the!)
+  // State Variables
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🆕 API Call
+  // API Call
   useEffect(() => {
     fetch('https://organicharvest-backend.onrender.com/api/products')
       .then(res => res.json())
@@ -34,7 +34,7 @@ function App() {
       });
   }, []);
 
-  // 🆕 Admin Delete Logic
+  // Admin Delete Logic
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka delete karna hai?')) return;
     try {
@@ -59,7 +59,7 @@ function App() {
     }
   };
 
-  // 🆕 Filter Logic (Search + Category)
+  // Filter Logic (Search + Category)
   const filteredProducts = products.filter((product) => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -91,8 +91,8 @@ function App() {
             <Contact />
             <Footer />
             
-            {/* 🆕 Floating Cart */}
-            <FloatingCart />
+            {/* 🆕 Temporary Cart Notification (Floating Cart ki jagah) */}
+            <CartNotification />
             
             <CartDrawer />
             <CheckoutModal />

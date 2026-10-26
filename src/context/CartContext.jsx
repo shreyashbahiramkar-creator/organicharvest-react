@@ -12,9 +12,12 @@ export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
-  // Toast State
+  // Toast State (Sirf errors ke liye)
   const [toastMessage, setToastMessage] = useState(null);
   const toastTimeoutRef = useRef(null);
+
+  // 🆕 Naya State: Temporary Cart Notification ke liye
+  const [cartNotification, setCartNotification] = useState(null);
 
   // 2. Jab bhi cart change ho, localStorage mein save karo
   useEffect(() => {
@@ -27,7 +30,7 @@ export function CartProvider({ children }) {
   const openCheckout = () => setIsCheckoutOpen(true);
   const closeCheckout = () => setIsCheckoutOpen(false);
 
-  // Toast Function
+  // Toast Function (Errors ke liye)
   const showToast = (message) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     setToastMessage(message);
@@ -63,7 +66,9 @@ export function CartProvider({ children }) {
       return [...prevCart, { ...product, quantity: 1 }];
     });
     
-    showToast(`${product.name} added to bag!`);
+    // 🆕 Toast ki jagah Cart Notification trigger karo
+    // Timestamp isliye add kiya hai taaki agar same product dobara add ho, toh bhi notification trigger ho
+    setCartNotification({ product, timestamp: Date.now() });
   };
 
   const removeFromCart = (productId) => {
@@ -114,7 +119,9 @@ export function CartProvider({ children }) {
         openCheckout,
         closeCheckout,
         toastMessage, 
-        showToast     
+        showToast,
+        cartNotification, // 🆕 Context mein pass kiya
+        setCartNotification // 🆕 Context mein pass kiya
       }}
     >
       {children}

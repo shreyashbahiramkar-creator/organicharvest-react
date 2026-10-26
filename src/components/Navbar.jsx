@@ -36,7 +36,7 @@ function Navbar({ searchQuery, setSearchQuery }) {
             onClick={openCart}
             className="flex items-center gap-2 font-bold text-sm text-[#26362b] hover:text-[#245b3b] transition-colors"
           >
-            Bag <span className="bg-[#eaf0e5] text-[#245b3b] w-6 h-6 flex items-center justify-center rounded-full text-xs">
+            Cart<span className="bg-[#eaf0e5] text-[#245b3b] w-6 h-6 flex items-center justify-center rounded-full text-xs">
               {cartCount}
             </span>
           </button>
