@@ -13,16 +13,15 @@ import AdminOrders from './components/Admin/AdminOrders';
 import TrackOrder from './components/TrackOrder'; 
 import CartNotification from './components/CartNotification'; 
 import ScrollToTop from './components/ScrollToTop'; 
+import ProductPage from './components/ProductPage'; // 🆕 Naya Page Import kiya
 
 function App() {
-  // State Variables
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false); 
 
-  // API Call
   useEffect(() => {
     fetch('https://organicharvest-backend.onrender.com/api/products')
       .then(res => {
@@ -40,7 +39,6 @@ function App() {
       });
   }, []);
 
-  // Admin Delete Logic
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka delete karna hai?')) return;
     try {
@@ -65,7 +63,6 @@ function App() {
     }
   };
 
-  // Filter Logic (Search + Category)
   const filteredProducts = products.filter((product) => {
     const matchesSearch = 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -74,7 +71,6 @@ function App() {
     return matchesSearch && matchesCategory;
   });
 
-  // Loading State (Skeleton Loader)
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fffefa] p-4 md:p-8">
@@ -98,7 +94,6 @@ function App() {
     );
   }
 
-  // Error State (Agar backend down ho)
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffefa] px-4">
@@ -116,50 +111,48 @@ function App() {
   }
 
   return (
-    <>
-      <Routes>
-        {/* Main Storefront Route */}
-        <Route path="/" element={
-          // 🆕 pb-24 hataya, flex flex-col add kiya
-          <div className="min-h-screen bg-[#fffefa] relative flex flex-col"> 
-            <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-            <Hero />
-            
-            {/* 🆕 flex-grow add kiya taaki ye bachi hui jagah le le aur footer niche rahe */}
-            <div className="flex-grow">
+    <div className="min-h-screen bg-[#fffefa] relative flex flex-col">
+      {/* 🆕 Navbar ab har page par dikhega */}
+      <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      
+      <div className="flex-grow">
+        <Routes>
+          {/* Main Storefront Route */}
+          <Route path="/" element={
+            <>
+              <Hero />
               <Products 
                 filteredProducts={filteredProducts} 
                 allProducts={products} 
                 selectedCategory={selectedCategory} 
                 setSelectedCategory={setSelectedCategory} 
-                // onDelete={handleDelete} 
+                onDelete={handleDelete} 
               />
               <Contact />
-            </div>
-            
-            {/* 🆕 Footer ab hamesha bottom par rahega */}
-            <Footer />
-            
-            {/* Scroll to Top Button */}
-            <ScrollToTop />
-            
-            {/* Temporary Cart Notification */}
-            <CartNotification />
-            
-            <CartDrawer />
-            <CheckoutModal />
-            <Toast /> 
-          </div>
-        } />
+            </>
+          } />
 
-        {/* Admin Panel Routes */}
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
+          {/* 🆕 Separate Product Page Route */}
+          <Route path="/product/:id" element={<ProductPage allProducts={products} />} />
 
-        {/* Track Order Route */}
-        <Route path="/track-order" element={<TrackOrder />} />
-      </Routes>
-    </>
+          {/* Admin Panel Routes */}
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+
+          {/* Track Order Route */}
+          <Route path="/track-order" element={<TrackOrder />} />
+        </Routes>
+      </div>
+      
+      {/* 🆕 Footer ab har page par dikhega */}
+      <Footer />
+      
+      <ScrollToTop />
+      <CartNotification />
+      <CartDrawer />
+      <CheckoutModal />
+      <Toast /> 
+    </div>
   );
 }
 

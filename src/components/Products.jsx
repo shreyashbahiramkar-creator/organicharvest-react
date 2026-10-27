@@ -1,16 +1,10 @@
-import { useState } from 'react'; 
 import ProductCard from './ProductCard';
 import Category from './Category'; 
-import ProductQuickView from './ProductQuickView'; 
 
-function Products({ filteredProducts, selectedCategory, setSelectedCategory, onDelete, allProducts }) {
+function Products({ filteredProducts, selectedCategory, setSelectedCategory, onDelete }) {
   
-  // Modal State (Konsa product open hai)
-  const [selectedProduct, setSelectedProduct] = useState(null);
-
   return (
     <section className="bg-white min-h-screen relative" id="products">
-      {/* Main Container: Flexbox for Sidebar + Content */}
       <div className="max-w-[1400px] mx-auto flex items-start">
         
         {/* LEFT SIDEBAR (Category) */}
@@ -44,7 +38,6 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
               </h2>
             </div>
             
-            {/* Clear Filter Button */}
             <div className="flex items-center gap-4">
               {selectedCategory && (
                 <button 
@@ -75,7 +68,6 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
                   key={product.id} 
                   product={product} 
                   onDelete={onDelete} 
-                  onProductClick={(p) => setSelectedProduct(p)} 
                 />
               ))}
             </div>
@@ -83,17 +75,6 @@ function Products({ filteredProducts, selectedCategory, setSelectedCategory, onD
 
         </div>
       </div>
-
-      {/* 🆕 Product Quick View Modal (Recursive + View All functionality) */}
-      {selectedProduct && (
-        <ProductQuickView 
-          product={selectedProduct} 
-          allProducts={allProducts || filteredProducts} 
-          onClose={() => setSelectedProduct(null)} 
-          onProductSelect={(newProduct) => setSelectedProduct(newProduct)} // 🆕 Recommended product click hone par naya modal
-          setSelectedCategory={setSelectedCategory} // 🆕 View All ke liye
-        />
-      )}
     </section>
   );
 }
