@@ -5,6 +5,10 @@ function AdminPanel() {
   // Admin ki Secret Key (Backend se match honi chahiye)
   const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
 
+  // 🆕 Login State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginKey, setLoginKey] = useState('');
+
   // Form State (originalPrice add kiya)
   const [formData, setFormData] = useState({
     name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: ''
@@ -37,10 +41,22 @@ function AdminPanel() {
   };
 
   useEffect(() => {
-    // Jab Admin Panel open ho, toh user ko Admin mark kar do
-    localStorage.setItem('isAdmin', 'true');
-    fetchProducts();
-  }, []);
+    // 🆕 Check agar user pehle se authenticated hai
+    if (isAuthenticated) {
+      localStorage.setItem('isAdmin', 'true');
+      fetchProducts();
+    }
+  }, [isAuthenticated]);
+
+  // 🆕 Login Handler
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (loginKey === ADMIN_SECRET_KEY) {
+      setIsAuthenticated(true);
+    } else {
+      alert('❌ Invalid Admin Key!');
+    }
+  };
 
   // Admin Logout Function
   const handleLogout = () => {
@@ -76,7 +92,6 @@ function AdminPanel() {
         body: JSON.stringify({ 
           ...formData, 
           price: parseFloat(formData.price),
-          // 🆕 originalPrice empty string hai toh null bhejo, warna parse karo
           originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
           stock: parseInt(formData.stock) || 0 
         }),
@@ -134,7 +149,6 @@ function AdminPanel() {
       name: product.name,
       category: product.category,
       price: product.price,
-      // 🆕 Agar originalPrice hai toh set karo, warna khali string
       originalPrice: product.originalPrice || '',
       unit: product.unit,
       image: product.image,
@@ -194,6 +208,36 @@ function AdminPanel() {
     }
   };
 
+  // 🆕 Login Screen (Agar authenticated nahi hai toh ye dikhega)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+          <h2 className="text-2xl font-bold text-center text-[#245b3b] mb-6">Admin Login</h2>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Enter Admin Secret Key</label>
+              <input 
+                type="password" 
+                value={loginKey} 
+                onChange={(e) => setLoginKey(e.target.value)} 
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#245b3b]"
+                placeholder="••••••••••••" 
+                required
+              />
+            </div>
+            <button type="submit" className="w-full bg-[#245b3b] text-white font-bold py-3 rounded-lg hover:bg-green-800 transition">
+              Login
+            </button>
+          </form>
+          <Link to="/" className="block text-center mt-4 text-sm text-gray-500 hover:text-[#245b3b]">
+            ← Back to Store
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-6xl mx-auto">
@@ -251,7 +295,6 @@ function AdminPanel() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="Fruits" />
               </div>
 
-              {/* 🆕 Price, Original Price, Unit & Stock Row */}
               <div className="flex gap-2">
                 <div className="w-1/2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Selling Price (₹) *</label>
@@ -298,7 +341,7 @@ function AdminPanel() {
               </button>
             </form>
 
-            {/* 🆕 BULK UPLOAD SECTION */}
+            {/* BULK UPLOAD SECTION */}
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h2 className="text-lg font-semibold text-gray-800 mb-2">Bulk Upload Products</h2>
               <p className="text-xs text-gray-500 mb-3">Paste JSON array of products here.</p>
@@ -352,7 +395,6 @@ function AdminPanel() {
                         </td>
                         <td className="p-3 text-sm text-gray-600">{product.category}</td>
                         
-                        {/* 🆕 Price Column (Show both selling & original) */}
                         <td className="p-3 text-sm">
                           <div className="font-semibold text-gray-800">₹{product.price}</div>
                           {product.originalPrice && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom'; // 🆕 useLocation import kiya
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Products from './components/Products';
@@ -13,7 +13,7 @@ import AdminOrders from './components/Admin/AdminOrders';
 import TrackOrder from './components/TrackOrder'; 
 import CartNotification from './components/CartNotification'; 
 import ScrollToTop from './components/ScrollToTop'; 
-import ProductPage from './components/ProductPage'; // 🆕 Naya Page Import kiya
+import ProductPage from './components/ProductPage'; 
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +21,16 @@ function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false); 
+  
+  // 🆕 Current URL track karne ke liye
+  const location = useLocation(); 
+
+  // 🆕 Auto-Reset Logic: Normal pages par Admin mode automatically remove ho jayega
+  useEffect(() => {
+    if (location.pathname !== '/admin' && location.pathname !== '/admin/orders') {
+      localStorage.removeItem('isAdmin');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     fetch('https://organicharvest-backend.onrender.com/api/products')
@@ -112,7 +122,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#fffefa] relative flex flex-col">
-      {/* 🆕 Navbar ab har page par dikhega */}
       <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       
       <div className="flex-grow">
@@ -132,7 +141,7 @@ function App() {
             </>
           } />
 
-          {/* 🆕 Separate Product Page Route */}
+          {/* Separate Product Page Route */}
           <Route path="/product/:id" element={<ProductPage allProducts={products} />} />
 
           {/* Admin Panel Routes */}
@@ -144,7 +153,6 @@ function App() {
         </Routes>
       </div>
       
-      {/* 🆕 Footer ab har page par dikhega */}
       <Footer />
       
       <ScrollToTop />
