@@ -18,18 +18,17 @@ function CheckoutModal() {
     e.preventDefault();
     setIsLoading(true);
 
-    // 🆕 Payload ko backend ke hisaab se format karo
+    // 🆕 Payload format
     const orderPayload = {
       customerName: formData.name,
       phone: formData.phone,
       address: formData.address,
-      totalAmount: cartTotal, // Agar backend 'total' expect karta hai toh yahan 'total' kar dena
+      totalAmount: cartTotal, 
       items: cart.map(item => {
-        // ID ko split karo
+        // ID ko split karo (Agar ID "222-500ml" hai toh sirf "222" bhejo)
         const originalProductId = item.id.toString().split('-')[0];
         
         return {
-          // Agar backend String ID expect kar raha hai toh Number() hata dein
           productId: Number(originalProductId), 
           productName: item.name,
           price: item.price,
@@ -38,7 +37,6 @@ function CheckoutModal() {
       })
     };
 
-    // 🆕 Console mein payload print karo taaki aap dekh sakein kya bhej rahe hain
     console.log("Sending Payload:", orderPayload);
 
     try {
@@ -49,7 +47,7 @@ function CheckoutModal() {
       });
 
       if (!response.ok) {
-        // 🆕 Backend ka exact error message nikaalo
+        // Backend ka exact error message nikaalo
         const errorText = await response.text();
         console.error("Backend Error Response:", errorText);
         throw new Error(`Server Error (${response.status}): ${errorText || 'Check console for details'}`);
@@ -57,9 +55,10 @@ function CheckoutModal() {
 
       const data = await response.json();
       
+      // 🆕 Order successful hone ke baad hi cart clear karein
       setOrderId(data.orderNumber || data.id || 'ORD-' + Date.now()); 
       setIsOrdered(true);
-      clearCart();
+      clearCart(); 
       showToast("Order placed successfully!");
 
     } catch (error) {
