@@ -4,27 +4,59 @@ import { useCart } from '../context/CartContext';
 import { optimizeImage } from '../utils/imageOptimizer';
 
 function ProductPage({ allProducts }) {
-  const { id } = useParams(); // URL se product ID nikalne ke liye
+  const { id } = useParams(); 
   const navigate = useNavigate();
   const { cart, addToCart, updateQuantity, removeFromCart } = useCart();
   
-  // URL ki ID ke basis par product dhoondein
   const product = allProducts.find(p => p.id.toString() === id);
 
-  // Variants State
-  const defaultVariants = [
-    { unit: '250 g', price: Math.round((product?.price || 0) * 0.6), originalPrice: product?.originalPrice ? Math.round(product.originalPrice * 0.6) : null },
-    { unit: '500 g', price: product?.price || 0, originalPrice: product?.originalPrice },
-    { unit: '1 kg', price: Math.round((product?.price || 0) * 1.8), originalPrice: product?.originalPrice ? Math.round(product.originalPrice * 1.8) : null }
-  ];
+  // 🆕 Dynamic Variants Logic
+  // Check karta hai ki product liquid (doodh/tel) hai ya solid (sabzi/anaj)
+  const generateVariants = () => {
+    if (!product) return [];
+    
+    // Agar backend se custom variants aa rahe hain toh unhe use karein
+    if (product.variants && product.variants.length > 0) return product.variants;
+
+    const unitStr = (product.unit || "").toLowerCase();
+    
+    // Liquid check: agar unit me 'ml', 'l', 'ltr', 'litre' hai
+    const isLiquid = unitStr.includes("ml") || unitStr.includes("ltr") || unitStr.includes("l") || unitStr.includes("litre");
+    const isKgBased = unitStr.includes("kg");
+
+    const basePrice = product.price || 0;
+    const baseOriginalPrice = product.originalPrice || null;
+
+    if (isLiquid) {
+      return [
+        { unit: '250 ml', price: Math.round(basePrice * 0.6), originalPrice: baseOriginalPrice ? Math.round(baseOriginalPrice * 0.6) : null },
+        { unit: '500 ml', price: basePrice, originalPrice: baseOriginalPrice },
+        { unit: '1 L', price: Math.round(basePrice * 1.8), originalPrice: baseOriginalPrice ? Math.round(baseOriginalPrice * 1.8) : null }
+      ];
+    } else if (isKgBased) {
+      return [
+        { unit: '250 g', price: Math.round(basePrice * 0.6), originalPrice: baseOriginalPrice ? Math.round(baseOriginalPrice * 0.6) : null },
+        { unit: '500 g', price: basePrice, originalPrice: baseOriginalPrice },
+        { unit: '1 kg', price: Math.round(basePrice * 1.8), originalPrice: baseOriginalPrice ? Math.round(baseOriginalPrice * 1.8) : null }
+      ];
+    } else {
+      // Agar packets/pieces (pc) hain (jaise Bread, Eggs)
+      return [
+        { unit: product.unit, price: basePrice, originalPrice: baseOriginalPrice }
+      ];
+    }
+  };
+
+  const variants = generateVariants();
   
-  const variants = product?.variants || defaultVariants;
+  // Default selection middle wale variant (500g ya 500ml) par set karein, agar available ho
   const [selectedVariant, setSelectedVariant] = useState(variants[1] || variants[0]);
 
-  // Jab product change ho (recommendation se), toh variant reset ho jaye aur page top par scroll ho
   useEffect(() => {
     window.scrollTo(0, 0);
-    setSelectedVariant(variants[1] || variants[0]);
+    // Jab product change ho, toh naye variants ke hisaab se reset karein
+    const newVariants = generateVariants();
+    setSelectedVariant(newVariants[1] || newVariants[0]);
   }, [id]);
 
   if (!product) {
@@ -36,13 +68,12 @@ function ProductPage({ allProducts }) {
     );
   }
 
-  // Recommended Products (Saare same category ke products, 10 tak)
   const recommendedProducts = allProducts
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 10); 
 
   // Cart check for this specific variant
-  const variantId = `${product.id}-${selectedVariant.unit.replace(/\s/g, '')}`;
+  const variantId = selectedVariant ? `${product.id}-${selectedVariant.unit.replace(/\s/g, '')}` : product.id;
   const cartItem = cart?.find(item => item.id === variantId);
   const quantity = cartItem ? cartItem.quantity : 0;
 
@@ -108,38 +139,42 @@ function ProductPage({ allProducts }) {
                 </p>
 
                 {/* Variants Selector */}
-                <div className="mb-8">
-                  <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Select Quantity</h3>
-                  <div className="flex gap-3 flex-wrap">
-                    {variants.map((v, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setSelectedVariant(v)}
-                        className={`flex flex-col items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold border-2 transition-all min-w-[90px] ${
-                          selectedVariant.unit === v.unit 
-                            ? 'border-[#245b3b] bg-[#eaf0e5] text-[#245b3b] shadow-sm' 
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                        }`}
-                      >
-                        <span>{v.unit}</span>
-                        <span className="text-xs font-bold mt-1">₹{v.price}</span>
-                      </button>
-                    ))}
+                {variants.length > 1 && (
+                  <div className="mb-8">
+                    <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider">Select Quantity</h3>
+                    <div className="flex gap-3 flex-wrap">
+                      {variants.map((v, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedVariant(v)}
+                          className={`flex flex-col items-center justify-center px-5 py-3 rounded-xl text-sm font-semibold border-2 transition-all min-w-[90px] ${
+                            selectedVariant?.unit === v.unit 
+                              ? 'border-[#245b3b] bg-[#eaf0e5] text-[#245b3b] shadow-sm' 
+                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          }`}
+                        >
+                          <span>{v.unit}</span>
+                          <span className="text-xs font-bold mt-1">₹{v.price}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Dynamic Price */}
-                <div className="flex items-end gap-3 mb-8">
-                  <span className="text-4xl font-extrabold text-gray-900">₹{selectedVariant.price}</span>
-                  {selectedVariant.originalPrice && (
-                    <span className="text-xl text-gray-400 line-through mb-1">₹{selectedVariant.originalPrice}</span>
-                  )}
-                  {selectedVariant.originalPrice && (
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold mb-1">
-                      {Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)}% OFF
-                    </span>
-                  )}
-                </div>
+                {selectedVariant && (
+                  <div className="flex items-end gap-3 mb-8">
+                    <span className="text-4xl font-extrabold text-gray-900">₹{selectedVariant.price}</span>
+                    {selectedVariant.originalPrice && (
+                      <span className="text-xl text-gray-400 line-through mb-1">₹{selectedVariant.originalPrice}</span>
+                    )}
+                    {selectedVariant.originalPrice && (
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold mb-1">
+                        {Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)}% OFF
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Add to Cart / Counter */}
                 <div className="mt-auto pt-6 border-t border-gray-100">
@@ -179,7 +214,7 @@ function ProductPage({ allProducts }) {
                     <div 
                       key={rec.id} 
                       className="min-w-[160px] md:min-w-[200px] bg-white border border-gray-100 rounded-xl p-3 cursor-pointer hover:shadow-md transition-shadow relative group"
-                      onClick={() => navigate(`/product/${rec.id}`)} // Click karne par naye page par jayega
+                      onClick={() => navigate(`/product/${rec.id}`)} 
                     >
                       <img src={optimizeImage(rec.image, 300, 300)} alt={rec.name} className="w-full aspect-square object-cover rounded-lg mb-3" />
                       <p className="text-sm font-bold text-gray-800 line-clamp-1">{rec.name}</p>
@@ -187,7 +222,7 @@ function ProductPage({ allProducts }) {
                       
                       <button 
                         onClick={(e) => {
-                          e.stopPropagation(); // Page change hone se roke
+                          e.stopPropagation(); 
                           addToCart(rec);
                         }}
                         className="absolute bottom-14 right-3 bg-white text-[#ff3269] border border-[#ff3269] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-pink-50 active:scale-90 transition-all"
