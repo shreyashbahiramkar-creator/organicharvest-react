@@ -41,7 +41,6 @@ function AdminPanel() {
   };
 
   useEffect(() => {
-    // 🆕 Check agar user pehle se authenticated hai
     if (isAuthenticated) {
       localStorage.setItem('isAdmin', 'true');
       fetchProducts();
@@ -61,7 +60,7 @@ function AdminPanel() {
   // Admin Logout Function
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
-    window.location.href = '/'; // Wapas main page par bhej do
+    window.location.href = '/';
   };
 
   // 2. Input Change Handler
@@ -114,7 +113,7 @@ function AdminPanel() {
     }
   };
 
-  // 4. Delete Product Handler
+  // 4. Delete Single Product Handler
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka is product ko delete karna hai?')) return;
     
@@ -143,7 +142,33 @@ function AdminPanel() {
     }
   };
 
-  // 5. Edit Button Click Handler
+  // 🆕 5. DELETE ALL Products Handler
+  const handleDeleteAll = async () => {
+    if (!window.confirm('⚠️ Kya aap pakka SAARE products delete karna chahte hain? Ye action undo nahi ho sakta!')) return;
+    
+    setIsSubmitting(true);
+    try {
+      // Saare products ko parallel me delete karne ke liye Promise.all use kiya
+      await Promise.all(products.map(async (product) => {
+        await fetch(`https://organicharvest-backend.onrender.com/api/products/${product.id}`, {
+          method: 'DELETE',
+          headers: {
+            'X-Admin-Key': ADMIN_SECRET_KEY 
+          }
+        });
+      }));
+      
+      setProducts([]); // UI se saare products hata do
+      alert('✅ Saare products successfully delete ho gaye!');
+    } catch (error) {
+      console.error(error);
+      alert('❌ Kuch products delete nahi ho paye. Server error!');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 6. Edit Button Click Handler
   const handleEditClick = (product) => {
     setFormData({
       name: product.name,
@@ -167,7 +192,7 @@ function AdminPanel() {
     setMessage('');
   };
 
-  // 🆕 6. Bulk Upload Handler
+  // 7. Bulk Upload Handler
   const handleBulkUpload = async () => {
     if (!bulkData.trim()) {
       alert('Please paste JSON data first.');
@@ -194,8 +219,8 @@ function AdminPanel() {
 
       if (res.ok) {
         alert('✅ Bulk products added successfully!');
-        setBulkData(''); // Textarea clear karo
-        fetchProducts(); // List refresh karo
+        setBulkData(''); 
+        fetchProducts(); 
       } else if (res.status === 401) {
         alert('❌ Unauthorized! Invalid Admin Key.');
       } else {
@@ -208,7 +233,7 @@ function AdminPanel() {
     }
   };
 
-  // 🆕 Login Screen (Agar authenticated nahi hai toh ye dikhega)
+  // 🆕 Login Screen
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -368,7 +393,20 @@ function AdminPanel() {
 
           {/* Right Side: Products List */}
           <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">All Products</h2>
+            
+            {/* 🆕 Heading aur Delete All Button */}
+            <div className="flex justify-between items-center border-b pb-2 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">All Products ({products.length})</h2>
+              {products.length > 0 && (
+                <button 
+                  onClick={handleDeleteAll}
+                  disabled={isSubmitting}
+                  className="bg-red-100 text-red-600 hover:bg-red-200 px-4 py-1.5 rounded-lg text-sm font-bold transition disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Deleting...' : '🗑️ Delete All'}
+                </button>
+              )}
+            </div>
             
             {loading ? (
               <p className="text-gray-500">Loading products...</p>
