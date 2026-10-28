@@ -13,7 +13,6 @@ function ProductCard({ product, onDelete }) {
   const cartItem = cart?.find(item => item.id === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
-  // Calculate Discount Percentage (Agar originalPrice available hai)
   const discountPercentage = product.originalPrice && product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -113,14 +112,12 @@ function ProductCard({ product, onDelete }) {
               ₹{product.price}
             </span>
             
-            {/* Original Price with Strikethrough */}
             {product.originalPrice && product.originalPrice > product.price && (
               <span className="text-gray-400 line-through text-[11px]">
                 ₹{product.originalPrice}
               </span>
             )}
 
-            {/* Discount Badge */}
             {discountPercentage > 0 && (
               <span className="text-[10px] text-green-600 font-bold bg-green-50 px-1 py-0.5 rounded">
                 {discountPercentage}% OFF
@@ -139,6 +136,7 @@ function ProductCard({ product, onDelete }) {
             </p>
           )}
 
+          {/* 🆕 DELETE BUTTON FIX: Ab ye sirf tab dikhega jab Admin ho AUR onDelete prop pass hua ho */}
           {onDelete && isAdmin && (
             <div className="mt-2 pt-2 border-t border-gray-100 flex justify-end">
               <button 
