@@ -83,21 +83,21 @@ function ProductCard({ product, onDelete }) {
             </span>
           )}
 
-          {/* 🆕 Button aur Controller ka size chhota kiya aur position adjust ki (bottom-3 right-3) */}
+          {/* 🆕 ADD Button / Qty Controller - Perfect Size & Position */}
           {!isOutOfStock && (
-            <div className="absolute bottom-2 right-2 z-10 scale-90 origin-bottom-right">
+            <div className="absolute bottom-3 right-3 z-10">
               {quantity === 0 ? (
                 <button 
                   onClick={handleAddClick} 
-                  className="bg-white text-[#ff3269] border border-[#ff3269] px-3.5 py-1.5 rounded-md font-bold text-xs shadow-sm hover:bg-pink-50 active:scale-95 transition-all duration-150"
+                  className="bg-white text-[#ff3269] border border-[#ff3269] px-4 py-1.5 rounded-lg font-bold text-xs md:text-sm shadow-sm hover:bg-pink-50 active:scale-95 transition-all duration-150"
                   aria-label={`Add ${product.name}`}
                 >
                   ADD
                 </button>
               ) : (
-                <div className="bg-[#ff3269] text-white flex items-center rounded-md font-bold text-xs shadow-md">
+                <div className="bg-[#ff3269] text-white flex items-center rounded-lg font-bold text-xs md:text-sm shadow-md">
                   <button onClick={handleMinusClick} className="px-2 py-1.5 active:scale-75 transition-transform">-</button>
-                  <span className="px-1 min-w-[16px] text-center">{quantity}</span>
+                  <span className="px-1 min-w-[20px] text-center">{quantity}</span>
                   <button onClick={handlePlusClick} className="px-2 py-1.5 active:scale-75 transition-transform">+</button>
                 </div>
               )}
@@ -109,30 +109,30 @@ function ProductCard({ product, onDelete }) {
         <div className="p-3 flex flex-col flex-grow">
           
           <div className="flex items-center flex-wrap gap-2 mb-1">
-            <span className="bg-[#1a8a3f] text-white px-1.5 py-0.5 rounded text-[11px] md:text-xs font-bold">
+            <span className="bg-[#1a8a3f] text-white px-1.5 py-0.5 rounded text-xs font-bold">
               ₹{product.price}
             </span>
             
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="text-gray-400 line-through text-[10px] md:text-[11px]">
+              <span className="text-gray-400 line-through text-[11px]">
                 ₹{product.originalPrice}
               </span>
             )}
 
             {discountPercentage > 0 && (
-              <span className="text-[9px] md:text-[10px] text-green-600 font-bold bg-green-50 px-1 py-0.5 rounded">
+              <span className="text-[10px] text-green-600 font-bold bg-green-50 px-1 py-0.5 rounded">
                 {discountPercentage}% OFF
               </span>
             )}
           </div>
 
-          <h3 className="text-[12px] md:text-sm font-semibold text-gray-800 leading-tight mb-1 line-clamp-2">
+          <h3 className="text-[13px] md:text-sm font-semibold text-gray-800 leading-tight mb-1 line-clamp-2">
             {product.name}
           </h3>
-          <p className="text-gray-500 text-[10px] md:text-[11px] mb-2">{product.unit || product.weight}</p>
+          <p className="text-gray-500 text-[11px] mb-2">{product.unit || product.weight}</p>
           
           {!isOutOfStock && product.stock <= 5 && (
-            <p className="text-red-500 text-[9px] md:text-[10px] font-bold mt-auto">
+            <p className="text-red-500 text-[10px] font-bold mt-auto">
               Only {product.stock} left!
             </p>
           )}
