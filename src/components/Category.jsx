@@ -1,15 +1,13 @@
 function Category({ selectedCategory, setSelectedCategory }) {
-  // 🆕 Expanded Categories
   const categories = [
     { name: "All", icon: "🛒" },
     { name: "Vegetables", icon: "🥦" },
     { name: "Fruits", icon: "🍎" },
-    { name: "Grains & Pulses", icon: "🌾" },
-    { name: "Herbs & Greens", icon: "🌿" },
-    { name: "Dairy & Eggs", icon: "🥛" },
+    { name: "Grains", icon: "🌾" },
+    { name: "Herbs", icon: "🌿" },
+    { name: "Dairy", icon: "🥛" },
     { name: "Bakery", icon: "🍞" },
-    { name: "Spices", icon: "🌶️" },
-    { name: "Dry Fruits", icon: "🥜" }
+    { name: "Spices", icon: "🌶️" }
   ];
 
   const handleCategoryClick = (categoryName) => {
@@ -17,9 +15,10 @@ function Category({ selectedCategory, setSelectedCategory }) {
   };
 
   return (
-    <aside className="w-[80px] md:w-[220px] flex-shrink-0 bg-white border-r border-[#e6e8df] h-full overflow-y-auto sticky top-0 md:top-20 md:h-[calc(100vh-80px)] custom-scrollbar">
+    // 🆕 Mobile par Horizontal Scroll, Desktop par Vertical Sidebar
+    <aside className="w-full md:w-[220px] flex-shrink-0 bg-white md:border-r border-gray-100 md:h-full md:overflow-y-auto md:sticky md:top-20 md:h-[calc(100vh-80px)] custom-scrollbar">
       
-      <div className="flex flex-col py-4 gap-1">
+      <div className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible py-3 md:py-4 px-2 md:px-0 gap-2 md:gap-1 no-scrollbar">
         {categories.map((cat, index) => {
           const isActive = selectedCategory === cat.name || (cat.name === 'All' && !selectedCategory);
           
@@ -27,17 +26,14 @@ function Category({ selectedCategory, setSelectedCategory }) {
             <div 
               key={index} 
               onClick={() => handleCategoryClick(cat.name)}
-              className={`flex flex-col md:flex-row items-center gap-2 md:gap-4 px-2 md:px-4 py-3 cursor-pointer transition-all duration-200
+              className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-xl md:rounded-none cursor-pointer transition-all duration-200
                 ${isActive 
-                  ? 'bg-[#eaf0e5] border-r-4 border-[#245b3b] text-[#245b3b]' // Changed color to match brand
-                  : 'hover:bg-gray-50 text-gray-600 border-r-4 border-transparent'}
+                  ? 'bg-[#245b3b] md:bg-[#eaf0e5] text-white md:text-[#245b3b] md:border-r-4 md:border-[#245b3b]' 
+                  : 'bg-gray-50 md:bg-transparent text-gray-600 hover:bg-gray-100 md:hover:bg-gray-50 md:border-r-4 md:border-transparent'}
               `}
             >
-              {/* Icon */}
-              <span className="text-2xl md:text-3xl">{cat.icon}</span>
-              
-              {/* Category Name */}
-              <span className={`text-[10px] md:text-sm text-center md:text-left font-semibold leading-tight ${isActive ? 'text-[#245b3b]' : 'text-gray-600'}`}>
+              <span className="text-lg md:text-2xl">{cat.icon}</span>
+              <span className={`text-xs md:text-sm font-semibold whitespace-nowrap ${isActive ? 'text-white md:text-[#245b3b]' : 'text-gray-600'}`}>
                 {cat.name}
               </span>
             </div>
