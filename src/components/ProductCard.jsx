@@ -17,6 +17,7 @@ function ProductCard({ product, onDelete }) {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
+  /* ── Saare handlers — untouched ── */
   const handleMinusClick = (e) => {
     e.preventDefault(); 
     e.stopPropagation(); 
@@ -48,7 +49,7 @@ function ProductCard({ product, onDelete }) {
   return (
     <Link to={`/product/${product.id}`} className="block h-full">
       <article 
-        className="group h-full bg-white border border-[#e6e8df] rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 relative flex flex-col cursor-pointer active:scale-[0.98]"
+        className="group h-full bg-white border border-[#e6e8df] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#245b3b]/30 hover:-translate-y-0.5 transition-all duration-200 relative flex flex-col cursor-pointer active:scale-[0.98]"
       >
         
         {/* Image Area */}
@@ -83,19 +84,19 @@ function ProductCard({ product, onDelete }) {
             </span>
           )}
 
-          {/* 🆕 Perfect Sized ADD Button (Original Style) */}
+          {/* ADD button — green theme */}
           {!isOutOfStock && (
             <div className="absolute bottom-2.5 right-2.5 z-10">
               {quantity === 0 ? (
                 <button 
                   onClick={handleAddClick} 
-                  className="bg-white text-[#ff3269] border border-[#ff3269] px-4 py-1.5 rounded-lg font-bold text-xs md:text-sm shadow-sm hover:bg-pink-50 active:scale-95 transition-all duration-150"
+                  className="bg-white text-[#245b3b] border border-[#245b3b] px-4 py-1.5 rounded-lg font-bold text-xs md:text-sm shadow-sm hover:bg-[#eaf0e5] active:scale-95 transition-all duration-150"
                   aria-label={`Add ${product.name}`}
                 >
                   ADD
                 </button>
               ) : (
-                <div className="bg-[#ff3269] text-white flex items-center rounded-lg font-bold text-xs md:text-sm shadow-md">
+                <div className="bg-[#245b3b] text-white flex items-center rounded-lg font-bold text-xs md:text-sm shadow-md">
                   <button onClick={handleMinusClick} className="px-2 py-1.5 active:scale-75 transition-transform">-</button>
                   <span className="px-1 min-w-[20px] text-center">{quantity}</span>
                   <button onClick={handlePlusClick} className="px-2 py-1.5 active:scale-75 transition-transform">+</button>
@@ -109,7 +110,7 @@ function ProductCard({ product, onDelete }) {
         <div className="p-3 flex flex-col flex-grow">
           
           <div className="flex items-center flex-wrap gap-2 mb-1">
-            <span className="bg-[#1a8a3f] text-white px-1.5 py-0.5 rounded text-xs font-bold">
+            <span className="bg-[#245b3b] text-white px-1.5 py-0.5 rounded text-xs font-bold">
               ₹{product.price}
             </span>
             
@@ -120,7 +121,7 @@ function ProductCard({ product, onDelete }) {
             )}
 
             {discountPercentage > 0 && (
-              <span className="text-[10px] text-green-600 font-bold bg-green-50 px-1 py-0.5 rounded">
+              <span className="text-[10px] text-[#245b3b] font-bold bg-[#eaf0e5] px-1 py-0.5 rounded">
                 {discountPercentage}% OFF
               </span>
             )}

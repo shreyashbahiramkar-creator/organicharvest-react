@@ -10,17 +10,14 @@ function ProductPage({ allProducts }) {
   
   const product = allProducts.find(p => p.id.toString() === id);
 
-  // 🆕 Dynamic Variants Logic
-  // Check karta hai ki product liquid (doodh/tel) hai ya solid (sabzi/anaj)
+  // Dynamic Variants Logic (untouched)
   const generateVariants = () => {
     if (!product) return [];
     
-    // Agar backend se custom variants aa rahe hain toh unhe use karein
     if (product.variants && product.variants.length > 0) return product.variants;
 
     const unitStr = (product.unit || "").toLowerCase();
     
-    // Liquid check: agar unit me 'ml', 'l', 'ltr', 'litre' hai
     const isLiquid = unitStr.includes("ml") || unitStr.includes("ltr") || unitStr.includes("l") || unitStr.includes("litre");
     const isKgBased = unitStr.includes("kg");
 
@@ -40,7 +37,6 @@ function ProductPage({ allProducts }) {
         { unit: '1 kg', price: Math.round(basePrice * 1.8), originalPrice: baseOriginalPrice ? Math.round(baseOriginalPrice * 1.8) : null }
       ];
     } else {
-      // Agar packets/pieces (pc) hain (jaise Bread, Eggs)
       return [
         { unit: product.unit, price: basePrice, originalPrice: baseOriginalPrice }
       ];
@@ -49,12 +45,10 @@ function ProductPage({ allProducts }) {
 
   const variants = generateVariants();
   
-  // Default selection middle wale variant (500g ya 500ml) par set karein, agar available ho
   const [selectedVariant, setSelectedVariant] = useState(variants[1] || variants[0]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Jab product change ho, toh naye variants ke hisaab se reset karein
     const newVariants = generateVariants();
     setSelectedVariant(newVariants[1] || newVariants[0]);
   }, [id]);
@@ -72,7 +66,6 @@ function ProductPage({ allProducts }) {
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 10); 
 
-  // Cart check for this specific variant
   const variantId = selectedVariant ? `${product.id}-${selectedVariant.unit.replace(/\s/g, '')}` : product.id;
   const cartItem = cart?.find(item => item.id === variantId);
   const quantity = cartItem ? cartItem.quantity : 0;
@@ -169,24 +162,24 @@ function ProductPage({ allProducts }) {
                       <span className="text-xl text-gray-400 line-through mb-1">₹{selectedVariant.originalPrice}</span>
                     )}
                     {selectedVariant.originalPrice && (
-                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold mb-1">
+                      <span className="bg-[#eaf0e5] text-[#245b3b] px-2 py-1 rounded text-sm font-bold mb-1">
                         {Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)}% OFF
                       </span>
                     )}
                   </div>
                 )}
 
-                {/* Add to Cart / Counter */}
+                {/* Add to Cart / Counter — green theme */}
                 <div className="mt-auto pt-6 border-t border-gray-100">
                   {quantity === 0 ? (
                     <button 
                       onClick={handleAddToCart}
-                      className="w-full bg-[#ff3269] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#e62b5e] active:scale-95 transition-all shadow-lg shadow-pink-200"
+                      className="w-full bg-[#245b3b] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#19452c] active:scale-95 transition-all shadow-lg shadow-green-900/20"
                     >
                       Add to Cart
                     </button>
                   ) : (
-                    <div className="w-full bg-[#ff3269] text-white flex items-center justify-between rounded-xl font-bold text-lg p-2">
+                    <div className="w-full bg-[#245b3b] text-white flex items-center justify-between rounded-xl font-bold text-lg p-2">
                       <button onClick={handleMinusClick} className="px-8 py-2 active:scale-90 transition-transform text-2xl">-</button>
                       <span>{quantity} in cart</span>
                       <button onClick={() => updateQuantity(variantId, 1)} className="px-8 py-2 active:scale-90 transition-transform text-2xl">+</button>
@@ -220,12 +213,13 @@ function ProductPage({ allProducts }) {
                       <p className="text-sm font-bold text-gray-800 line-clamp-1">{rec.name}</p>
                       <p className="text-sm text-gray-500 mt-1 font-semibold">₹{rec.price}</p>
                       
+                      {/* ADD button — green theme */}
                       <button 
                         onClick={(e) => {
                           e.stopPropagation(); 
                           addToCart(rec);
                         }}
-                        className="absolute bottom-14 right-3 bg-white text-[#ff3269] border border-[#ff3269] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-pink-50 active:scale-90 transition-all"
+                        className="absolute bottom-14 right-3 bg-white text-[#245b3b] border border-[#245b3b] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-[#eaf0e5] active:scale-90 transition-all"
                       >
                         ADD
                       </button>

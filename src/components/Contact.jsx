@@ -3,6 +3,7 @@ import { useState } from 'react';
 function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [showToast, setShowToast] = useState(false);
+  const [toastName, setToastName] = useState(''); // 🆕 toast ke liye naam save
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -10,6 +11,7 @@ function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setToastName(formData.name); // 🆕 pehle naam save karo
     setShowToast(true);
     setFormData({ name: '', email: '', message: '' });
     
@@ -18,8 +20,8 @@ function Contact() {
   };
 
   return (
-    <section id="about" className="max-w-[1200px] mx-auto px-4 md:px-6 py-16 scroll-mt-20">
-  <div id="contact" className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+    <section id="about" className="max-w-[1200px] mx-auto px-4 md:px-6 py-16 scroll-mt-[130px]">
+      <div id="contact" className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
     
         {/* Left Info */}
         <div>
@@ -109,10 +111,10 @@ function Contact() {
 
       </div>
 
-      {/* Toast Notification */}
+      {/* Toast Notification — 🆕 toastName use karta hai */}
       {showToast && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#245b3b] text-white px-6 py-3 rounded-full font-semibold shadow-lg z-[300] animate-[slideUp_0.3s_ease]">
-          ✅ Thanks {formData.name || 'for reaching out'}! We'll get back to you soon.
+          ✅ Thanks {toastName || 'for reaching out'}! We'll get back to you soon.
         </div>
       )}
     </section>

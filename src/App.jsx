@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom'; // 🆕 useLocation import kiya
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import ShopByCategory from './components/ShopByCategory'; // 🆕
 import Products from './components/Products';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -22,10 +23,9 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false); 
   
-  // 🆕 Current URL track karne ke liye
   const location = useLocation(); 
 
-  // 🆕 Auto-Reset Logic: Normal pages par Admin mode automatically remove ho jayega
+  // Admin mode auto-reset on normal pages
   useEffect(() => {
     if (location.pathname !== '/admin' && location.pathname !== '/admin/orders') {
       localStorage.removeItem('isAdmin');
@@ -83,8 +83,9 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fffefa] p-4 md:p-8">
-        <div className="max-w-[1400px] mx-auto flex gap-6">
+      <div className="min-h-screen bg-[#fffefa]">
+        <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <div className="max-w-[1400px] mx-auto p-4 md:p-8 flex gap-6">
           <div className="hidden md:block w-[220px] space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="h-12 bg-gray-200 rounded-lg animate-pulse"></div>
@@ -130,6 +131,10 @@ function App() {
           <Route path="/" element={
             <>
               <Hero />
+              <ShopByCategory 
+                selectedCategory={selectedCategory} 
+                setSelectedCategory={setSelectedCategory} 
+              />
               <Products 
                 filteredProducts={filteredProducts} 
                 allProducts={products} 
