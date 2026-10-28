@@ -1,5 +1,5 @@
 import { useState, memo } from 'react'; 
-import { Link } from 'react-router-dom'; // 🆕 Link import kiya
+import { Link } from 'react-router-dom'; 
 import { useCart } from '../context/CartContext'; 
 import { optimizeImage } from '../utils/imageOptimizer'; 
 
@@ -13,8 +13,13 @@ function ProductCard({ product, onDelete }) {
   const cartItem = cart?.find(item => item.id === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
+  // Calculate Discount Percentage (Agar originalPrice available hai)
+  const discountPercentage = product.originalPrice && product.originalPrice > product.price
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : 0;
+
   const handleMinusClick = (e) => {
-    e.preventDefault(); // 🆕 Link ko trigger hone se roke
+    e.preventDefault(); 
     e.stopPropagation(); 
     if (quantity === 1) {
       removeFromCart(product.id);
@@ -24,25 +29,24 @@ function ProductCard({ product, onDelete }) {
   };
 
   const handleAddClick = (e) => {
-    e.preventDefault(); // 🆕 Link ko trigger hone se roke
+    e.preventDefault(); 
     e.stopPropagation();
     addToCart(product);
   };
 
   const handlePlusClick = (e) => {
-    e.preventDefault(); // 🆕 Link ko trigger hone se roke
+    e.preventDefault(); 
     e.stopPropagation();
     updateQuantity(product.id, 1);
   };
 
   const handleDeleteClick = (e) => {
-    e.preventDefault(); // 🆕 Link ko trigger hone se roke
+    e.preventDefault(); 
     e.stopPropagation();
     onDelete(product.id);
   };
 
   return (
-    // 🆕 Pure card ko Link se wrap kiya
     <Link to={`/product/${product.id}`} className="block h-full">
       <article 
         className="group h-full bg-white border border-[#e6e8df] rounded-xl overflow-hidden hover:shadow-lg transition-all duration-200 relative flex flex-col cursor-pointer active:scale-[0.98]"
@@ -104,13 +108,22 @@ function ProductCard({ product, onDelete }) {
         {/* Info Area */}
         <div className="p-3 flex flex-col flex-grow">
           
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center flex-wrap gap-2 mb-1">
             <span className="bg-[#1a8a3f] text-white px-1.5 py-0.5 rounded text-xs font-bold">
               ₹{product.price}
             </span>
-            {product.originalPrice && (
-              <span className="text-gray-400 line-through text-xs">
+            
+            {/* Original Price with Strikethrough */}
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-gray-400 line-through text-[11px]">
                 ₹{product.originalPrice}
+              </span>
+            )}
+
+            {/* Discount Badge */}
+            {discountPercentage > 0 && (
+              <span className="text-[10px] text-green-600 font-bold bg-green-50 px-1 py-0.5 rounded">
+                {discountPercentage}% OFF
               </span>
             )}
           </div>

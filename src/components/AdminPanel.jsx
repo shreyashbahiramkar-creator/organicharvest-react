@@ -5,9 +5,9 @@ function AdminPanel() {
   // Admin ki Secret Key (Backend se match honi chahiye)
   const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
 
-  // Form State (Stock add kiya)
+  // Form State (originalPrice add kiya)
   const [formData, setFormData] = useState({
-    name: '', category: '', price: '', unit: '', image: '', tag: '', stock: ''
+    name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: ''
   });
   
   const [message, setMessage] = useState('');
@@ -76,13 +76,15 @@ function AdminPanel() {
         body: JSON.stringify({ 
           ...formData, 
           price: parseFloat(formData.price),
+          // 🆕 originalPrice empty string hai toh null bhejo, warna parse karo
+          originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
           stock: parseInt(formData.stock) || 0 
         }),
       });
 
       if (res.ok) {
         setMessage(editingId ? '✅ Product updated successfully!' : '✅ Product added successfully!');
-        setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
+        setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' }); 
         setEditingId(null); 
         fetchProducts(); 
       } else if (res.status === 401) {
@@ -113,7 +115,7 @@ function AdminPanel() {
         setProducts(prev => prev.filter(p => p.id !== id));
         if (editingId === id) {
           setEditingId(null);
-          setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
+          setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' }); 
         }
       } else if (res.status === 401) {
         alert('Unauthorized! Aapke paas delete karne ki permission nahi hai.');
@@ -132,6 +134,8 @@ function AdminPanel() {
       name: product.name,
       category: product.category,
       price: product.price,
+      // 🆕 Agar originalPrice hai toh set karo, warna khali string
+      originalPrice: product.originalPrice || '',
       unit: product.unit,
       image: product.image,
       tag: product.tag || '',
@@ -145,7 +149,7 @@ function AdminPanel() {
   // Cancel Edit Handler
   const handleCancelEdit = () => {
     setEditingId(null);
-    setFormData({ name: '', category: '', price: '', unit: '', image: '', tag: '', stock: '' }); 
+    setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' }); 
     setMessage('');
   };
 
@@ -247,18 +251,29 @@ function AdminPanel() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="Fruits" />
               </div>
 
+              {/* 🆕 Price, Original Price, Unit & Stock Row */}
               <div className="flex gap-2">
-                <div className="w-1/3">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Price (₹) *</label>
-                  <input type="number" name="price" value={formData.price} onChange={handleChange} required
+                <div className="w-1/2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Selling Price (₹) *</label>
+                  <input type="number" name="price" value={formData.price} onChange={handleChange} required step="0.01" min="0"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="150" />
                 </div>
-                <div className="w-1/3">
+                <div className="w-1/2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Original Price (₹) <span className="text-gray-400 font-normal">Optional</span>
+                  </label>
+                  <input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} step="0.01" min="0"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="200" />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="w-1/2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Unit *</label>
                   <input type="text" name="unit" value={formData.unit} onChange={handleChange} required
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="1 kg" />
                 </div>
-                <div className="w-1/3">
+                <div className="w-1/2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Stock *</label>
                   <input type="number" name="stock" value={formData.stock} onChange={handleChange} required min="0"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#245b3b]" placeholder="50" />
@@ -293,7 +308,7 @@ function AdminPanel() {
                 onChange={(e) => setBulkData(e.target.value)}
                 rows="5"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono mb-3 focus:outline-none focus:ring-2 focus:ring-[#245b3b]"
-                placeholder='[{"name":"Apple","category":"Fruits","price":100,"unit":"1 kg","stock":50,"image":"url"}]'
+                placeholder='[{"name":"Apple","category":"Fruits","price":100,"originalPrice":150,"unit":"1 kg","stock":50,"image":"url"}]'
               ></textarea>
 
               <button 
@@ -336,7 +351,14 @@ function AdminPanel() {
                           <span className="font-medium text-sm text-gray-800">{product.name}</span>
                         </td>
                         <td className="p-3 text-sm text-gray-600">{product.category}</td>
-                        <td className="p-3 text-sm font-semibold text-gray-800">₹{product.price}</td>
+                        
+                        {/* 🆕 Price Column (Show both selling & original) */}
+                        <td className="p-3 text-sm">
+                          <div className="font-semibold text-gray-800">₹{product.price}</div>
+                          {product.originalPrice && (
+                            <div className="text-xs text-gray-400 line-through">₹{product.originalPrice}</div>
+                          )}
+                        </td>
                         
                         <td className="p-3 text-sm">
                           {product.stock > 0 ? (
