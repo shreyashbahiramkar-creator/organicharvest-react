@@ -109,9 +109,9 @@ function ProductCard({ product, onDelete }) {
         <div className="p-3 flex flex-col flex-grow">
           
           <div className="flex items-center flex-wrap gap-2 mb-1">
-            <span className="bg-[#245b3b] text-white px-1.5 py-0.5 rounded text-xs font-bold">
-              ₹{product.price}
-            </span>
+            <span className="bg-[#1a8a3f] text-white px-1.5 py-0.5 rounded text-xs font-bold">
+            ₹{product.price}
+              </span>
             
             {product.originalPrice && product.originalPrice > product.price && (
               <span className="text-gray-400 line-through text-[11px]">
