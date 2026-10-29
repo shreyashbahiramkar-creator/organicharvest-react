@@ -140,7 +140,8 @@ const AdminDashboard = ({ products }) => {
             <table className="w-full text-left">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Order ID</th>
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Order ID</th>
+
                   <th className="px-6 py-4 font-medium">Customer</th>
                   <th className="px-6 py-4 font-medium">Total</th>
                   <th className="px-6 py-4 font-medium">Status</th>

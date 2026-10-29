@@ -195,7 +195,7 @@ const AdminOrders = () => {
             <table className="w-full text-left border-collapse">
               <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Order ID</th>
+                  <th className="px-6 py-4 font-medium whitespace-nowrap">Order ID</th>
                   <th className="px-6 py-4 font-medium">Customer</th>
                   <th className="px-6 py-4 font-medium">Items</th>
                   <th className="px-6 py-4 font-medium">Total Amount</th>
