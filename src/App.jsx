@@ -2,19 +2,23 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import ShopByCategory from './components/ShopByCategory'; // 🆕
+import ShopByCategory from './components/ShopByCategory'; 
 import Products from './components/Products';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import Toast from './components/Toast'; 
-import AdminPanel from './components/AdminPanel'; 
-import AdminOrders from './components/Admin/AdminOrders';
 import TrackOrder from './components/TrackOrder'; 
 import CartNotification from './components/CartNotification'; 
 import ScrollToTop from './components/ScrollToTop'; 
 import ProductPage from './components/ProductPage'; 
+
+// Admin Imports
+import AdminLayout from './components/Admin/AdminLayout';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import AdminProducts from './components/Admin/AdminProducts'; // 🆕 Import add kiya
+import AdminOrders from './components/Admin/AdminOrders';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -24,13 +28,14 @@ function App() {
   const [error, setError] = useState(false); 
   
   const location = useLocation(); 
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   // Admin mode auto-reset on normal pages
   useEffect(() => {
-    if (location.pathname !== '/admin' && location.pathname !== '/admin/orders') {
+    if (!isAdminRoute) {
       localStorage.removeItem('isAdmin');
     }
-  }, [location.pathname]);
+  }, [isAdminRoute]);
 
   useEffect(() => {
     fetch('https://organicharvest-backend.onrender.com/api/products')
@@ -81,7 +86,7 @@ function App() {
     return matchesSearch && matchesCategory;
   });
 
-  if (loading) {
+  if (loading && !isAdminRoute) {
     return (
       <div className="min-h-screen bg-[#fffefa]">
         <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -105,7 +110,7 @@ function App() {
     );
   }
 
-  if (error) {
+  if (error && !isAdminRoute) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffefa] px-4">
         <div className="text-6xl mb-4">😕</div>
@@ -123,7 +128,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#fffefa] relative flex flex-col">
-      <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+      {/* Store Navbar - Only show if not admin route */}
+      {!isAdminRoute && <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
       
       <div className="flex-grow">
         <Routes>
@@ -146,25 +152,32 @@ function App() {
             </>
           } />
 
-          {/* Separate Product Page Route */}
           <Route path="/product/:id" element={<ProductPage allProducts={products} />} />
-
-          {/* Admin Panel Routes */}
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-
-          {/* Track Order Route */}
           <Route path="/track-order" element={<TrackOrder />} />
+
+          {/* 🆕 Admin Routes with Nested Layout */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard products={products} />} />
+            <Route path="products" element={<AdminProducts />} /> {/* 🆕 Products Route Add kiya */}
+            <Route path="orders" element={<AdminOrders />} />
+          </Route>
         </Routes>
       </div>
       
-      <Footer />
+      {/* Store Footer - Only show if not admin route */}
+      {!isAdminRoute && <Footer />}
       
       <ScrollToTop />
-      <CartNotification />
-      <CartDrawer />
-      <CheckoutModal />
-      <Toast /> 
+      
+      {/* Store Cart/Checkout - Only show if not admin route */}
+      {!isAdminRoute && (
+        <>
+          <CartNotification />
+          <CartDrawer />
+          <CheckoutModal />
+          <Toast /> 
+        </>
+      )}
     </div>
   );
 }
