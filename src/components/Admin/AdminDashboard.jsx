@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // 🆕 Import kiya
 import { Package, ShoppingCart, IndianRupee, Users, Plus, ArrowUpRight, ArrowDownRight, MoreHorizontal } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -22,6 +23,7 @@ const categoryData = [
 ];
 
 const AdminDashboard = ({ products }) => {
+  const navigate = useNavigate(); // 🆕 Hook initialize kiya
   const [orders, setOrders] = useState([]);
 
   // Fetch Orders from Backend
@@ -46,7 +48,11 @@ const AdminDashboard = ({ products }) => {
           <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Welcome back, Admin! Here's what's happening with your store today.</p>
         </div>
-        <button className="bg-green-700 hover:bg-green-800 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors">
+        {/* 🆕 Button updated with onClick */}
+        <button 
+          onClick={() => navigate('/admin/products')} 
+          className="bg-green-700 hover:bg-green-800 text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors"
+        >
           <Plus size={18} /> Add Product
         </button>
       </div>

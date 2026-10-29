@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Upload, X, PackageOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, Upload, X, PackageOpen, Search, AlertTriangle } from 'lucide-react';
 
 function AdminProducts() {
   const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
@@ -16,6 +16,10 @@ function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  
+  // 🆕 Naye States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -78,16 +82,18 @@ function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Pakka is product ko delete karna hai?')) return;
+  // 🆕 Delete Function (Ab Custom Modal se trigger hoga)
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
     try {
-      const res = await fetch(`${API_URL}/${id}`, {
+      const res = await fetch(`${API_URL}/${deleteConfirmId}`, {
         method: 'DELETE',
         headers: { 'X-Admin-Key': ADMIN_SECRET_KEY }
       });
       if (res.ok) {
-        setProducts(prev => prev.filter(p => p.id !== id));
-        if (editingId === id) handleCancelEdit();
+        setProducts(prev => prev.filter(p => p.id !== deleteConfirmId));
+        if (editingId === deleteConfirmId) handleCancelEdit();
+        setDeleteConfirmId(null); // Modal band karo
       }
     } catch (error) {
       alert('Server error!');
@@ -138,6 +144,12 @@ function AdminProducts() {
       setIsSubmitting(false);
     }
   };
+
+  // 🆕 Search Filter Logic
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -219,6 +231,12 @@ function AdminProducts() {
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">Image URL</label>
               <input type="url" name="image" value={formData.image} onChange={handleChange} required
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" placeholder="https://..." />
+              {/* 🆕 Image Preview */}
+              {formData.image && (
+                <div className="mt-2 h-20 w-20 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                  <img src={formData.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
+                </div>
+              )}
             </div>
 
             <div>
@@ -236,17 +254,29 @@ function AdminProducts() {
 
         {/* Right Side: Products Table */}
         <div className="xl:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-6 border-b border-gray-50 flex justify-between items-center">
-            <h2 className="text-lg font-bold text-gray-800">All Products ({products.length})</h2>
+          <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h2 className="text-lg font-bold text-gray-800">All Products ({filteredProducts.length})</h2>
+            
+            {/* 🆕 Search Bar */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search products..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+              />
+            </div>
           </div>
           
           <div className="overflow-x-auto flex-1">
             {loading ? (
               <div className="p-8 text-center text-gray-500">Loading products...</div>
-            ) : products.length === 0 ? (
+            ) : filteredProducts.length === 0 ? (
               <div className="p-12 text-center flex flex-col items-center">
                 <PackageOpen size={48} className="text-gray-300 mb-4" />
-                <p className="text-gray-500">No products found. Add one from the left!</p>
+                <p className="text-gray-500">No products found.</p>
               </div>
             ) : (
               <table className="w-full text-left border-collapse">
@@ -260,7 +290,7 @@ function AdminProducts() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {products.map((product) => (
+                  {filteredProducts.map((product) => (
                     <tr key={product.id} className={`hover:bg-gray-50/50 transition-colors ${editingId === product.id ? 'bg-blue-50/50' : ''}`}>
                       <td className="px-6 py-4 flex items-center gap-3">
                         <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover bg-gray-100 border border-gray-200" />
@@ -285,7 +315,8 @@ function AdminProducts() {
                           <button onClick={() => handleEditClick(product)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                             <Edit2 size={16} />
                           </button>
-                          <button onClick={() => handleDelete(product.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          {/* 🆕 Delete Button triggers modal */}
+                          <button onClick={() => setDeleteConfirmId(product.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -299,6 +330,27 @@ function AdminProducts() {
         </div>
 
       </div>
+
+      {/* 🆕 Custom Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
+            <div className="mx-auto w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Delete Product?</h2>
+            <p className="text-gray-500 text-sm mb-6">Kya aap pakka is product ko delete karna chahte hain? Yeh action undo nahi ho sakta.</p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setDeleteConfirmId(null)} className="px-5 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition-colors w-full">
+                Cancel
+              </button>
+              <button onClick={confirmDelete} className="bg-red-500 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-red-600 transition-colors w-full">
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bulk Upload Modal */}
       {showBulkModal && (
