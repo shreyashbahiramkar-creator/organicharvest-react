@@ -17,7 +17,6 @@ function ProductCard({ product, onDelete }) {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
-  /* ── Saare handlers — untouched ── */
   const handleMinusClick = (e) => {
     e.preventDefault(); 
     e.stopPropagation(); 
@@ -84,19 +83,19 @@ function ProductCard({ product, onDelete }) {
             </span>
           )}
 
-          {/* ADD button — green theme */}
+          {/* 🩷 ADD button — PINK (original) */}
           {!isOutOfStock && (
             <div className="absolute bottom-2.5 right-2.5 z-10">
               {quantity === 0 ? (
                 <button 
                   onClick={handleAddClick} 
-                  className="bg-white text-[#245b3b] border border-[#245b3b] px-4 py-1.5 rounded-lg font-bold text-xs md:text-sm shadow-sm hover:bg-[#eaf0e5] active:scale-95 transition-all duration-150"
+                  className="bg-white text-[#ff3269] border border-[#ff3269] px-4 py-1.5 rounded-lg font-bold text-xs md:text-sm shadow-sm hover:bg-pink-50 active:scale-95 transition-all duration-150"
                   aria-label={`Add ${product.name}`}
                 >
                   ADD
                 </button>
               ) : (
-                <div className="bg-[#245b3b] text-white flex items-center rounded-lg font-bold text-xs md:text-sm shadow-md">
+                <div className="bg-[#ff3269] text-white flex items-center rounded-lg font-bold text-xs md:text-sm shadow-md">
                   <button onClick={handleMinusClick} className="px-2 py-1.5 active:scale-75 transition-transform">-</button>
                   <span className="px-1 min-w-[20px] text-center">{quantity}</span>
                   <button onClick={handlePlusClick} className="px-2 py-1.5 active:scale-75 transition-transform">+</button>

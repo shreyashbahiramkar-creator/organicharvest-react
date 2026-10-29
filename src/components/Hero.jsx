@@ -6,9 +6,7 @@ import hero1 from '../assets/hero1.png';
 import hero2 from '../assets/hero2.png';
 import hero3 from '../assets/hero3.png';
 
-/* ───────── Slider data ─────────
-   pos → image ka kaunsa hissa dikhe (banners me text left side pe hai,
-   isliye right side focus — baked text crop ho jayega) */
+/* ───────── Slider data ───────── */
 const slides = [
   {
     title: 'Fresh From Farm to Your Home',
@@ -88,7 +86,7 @@ function Hero() {
             >
               <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 pt-8 pb-10 md:py-14 grid md:grid-cols-2 gap-2 md:gap-6 items-center">
 
-                {/* ── LEFT : text ── */}
+                {/* ── LEFT : text (button ab yahan nahi hai) ── */}
                 <div className="text-center md:text-left">
                   <div className="inline-flex items-center gap-2.5 mb-3 md:mb-6">
                     <span className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-white/80 shadow-sm flex items-center justify-center">
@@ -112,37 +110,39 @@ function Hero() {
                   <p className="mt-2.5 md:mt-4 text-green-900/70 text-sm sm:text-base md:text-lg max-w-md mx-auto md:mx-0">
                     {slide.subtitle}
                   </p>
+                </div>
 
+                {/* ── RIGHT : image (upar uthaya) + button (niche) ── */}
+                <div className="flex flex-col items-center">
+                  <div className="relative w-full h-48 sm:h-60 md:h-[330px] lg:h-[390px] md:-mt-6 lg:-mt-10">
+                    <img
+                      src={slide.image}
+                      alt={slide.alt}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      draggable="false"
+                      className="w-full h-full object-cover select-none"
+                      style={{
+                        objectPosition: slide.pos,
+                        WebkitMaskImage: 'linear-gradient(to right, transparent, black 22%)',
+                        maskImage: 'linear-gradient(to right, transparent, black 22%)',
+                      }}
+                    />
+                    <p
+                      className="absolute -top-1 right-1 md:right-4 text-green-800/90 text-base md:text-2xl -rotate-3 pointer-events-none"
+                      style={{ fontFamily: "'Caveat', 'Segoe Script', cursive" }}
+                    >
+                      {slide.note}
+                    </p>
+                  </div>
+
+                  {/* 🆕 Button ab image ke NICHE */}
                   <a
                     href={slide.href}
-                    className="group inline-flex items-center gap-2 mt-5 md:mt-8 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full bg-green-800 hover:bg-green-900 text-white text-sm md:text-base font-semibold shadow-lg shadow-green-900/20 transition-all"
+                    className="group inline-flex items-center gap-2 mt-4 md:mt-5 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full bg-green-800 hover:bg-green-900 text-white text-sm md:text-base font-semibold shadow-lg shadow-green-900/20 transition-all"
                   >
                     {slide.cta}
                     <ArrowIcon className="w-4 h-4 md:w-5 md:h-5 transition-transform duration-300 group-hover:translate-x-1" />
                   </a>
-                </div>
-
-                {/* ── RIGHT : image ── */}
-                <div className="relative h-48 sm:h-60 md:h-[330px] lg:h-[390px]">
-                  <img
-                    src={slide.image}
-                    alt={slide.alt}
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    draggable="false"
-                    className="w-full h-full object-cover select-none"
-                    style={{
-                      objectPosition: slide.pos,
-                      /* left edge fade → image green bg me smoothly blend hogi */
-                      WebkitMaskImage: 'linear-gradient(to right, transparent, black 22%)',
-                      maskImage: 'linear-gradient(to right, transparent, black 22%)',
-                    }}
-                  />
-                  <p
-                    className="absolute -top-1 right-1 md:right-4 text-green-800/90 text-base md:text-2xl -rotate-3 pointer-events-none"
-                    style={{ fontFamily: "'Caveat', 'Segoe Script', cursive" }}
-                  >
-                    {slide.note}
-                  </p>
                 </div>
               </div>
             </div>

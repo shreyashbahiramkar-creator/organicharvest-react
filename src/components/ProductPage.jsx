@@ -169,17 +169,17 @@ function ProductPage({ allProducts }) {
                   </div>
                 )}
 
-                {/* Add to Cart / Counter — green theme */}
+                {/* Add to Cart / Counter — 🩷 PINK */}
                 <div className="mt-auto pt-6 border-t border-gray-100">
                   {quantity === 0 ? (
                     <button 
                       onClick={handleAddToCart}
-                      className="w-full bg-[#245b3b] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#19452c] active:scale-95 transition-all shadow-lg shadow-green-900/20"
+                      className="w-full bg-[#ff3269] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#e62b5e] active:scale-95 transition-all shadow-lg shadow-pink-200"
                     >
                       Add to Cart
                     </button>
                   ) : (
-                    <div className="w-full bg-[#245b3b] text-white flex items-center justify-between rounded-xl font-bold text-lg p-2">
+                    <div className="w-full bg-[#ff3269] text-white flex items-center justify-between rounded-xl font-bold text-lg p-2">
                       <button onClick={handleMinusClick} className="px-8 py-2 active:scale-90 transition-transform text-2xl">-</button>
                       <span>{quantity} in cart</span>
                       <button onClick={() => updateQuantity(variantId, 1)} className="px-8 py-2 active:scale-90 transition-transform text-2xl">+</button>
@@ -213,13 +213,13 @@ function ProductPage({ allProducts }) {
                       <p className="text-sm font-bold text-gray-800 line-clamp-1">{rec.name}</p>
                       <p className="text-sm text-gray-500 mt-1 font-semibold">₹{rec.price}</p>
                       
-                      {/* ADD button — green theme */}
+                      {/* 🩷 ADD button — PINK */}
                       <button 
                         onClick={(e) => {
                           e.stopPropagation(); 
                           addToCart(rec);
                         }}
-                        className="absolute bottom-14 right-3 bg-white text-[#245b3b] border border-[#245b3b] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-[#eaf0e5] active:scale-90 transition-all"
+                        className="absolute bottom-14 right-3 bg-white text-[#ff3269] border border-[#ff3269] px-3 py-1 rounded-md text-xs font-bold shadow-sm hover:bg-pink-50 active:scale-90 transition-all"
                       >
                         ADD
                       </button>
