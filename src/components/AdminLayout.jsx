@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, Package, Users, FolderTree, Boxes,
   BarChart3, Megaphone, Settings, Search, Bell, LogOut, Store, Leaf
 } from 'lucide-react';
-
-const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
+import { useAuth } from '../../context/AuthContext'; // 🆕 AuthContext import kiya
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/orders' },
@@ -20,63 +19,29 @@ const navItems = [
 ];
 
 function AdminLayout({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isAdmin') === 'true');
-  const [loginKey, setLoginKey] = useState('');
+  const { user, logout, loading } = useAuth(); // 🆕 AuthContext se user nikala
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (loginKey === ADMIN_SECRET_KEY) {
-      localStorage.setItem('isAdmin', 'true');
-      setIsAuthenticated(true);
-    } else {
-      alert('❌ Invalid Admin Key!');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
-    window.location.href = '/';
-  };
-
-  /* ═══ Login Screen ═══ */
-  if (!isAuthenticated) {
+  // 🆕 Loading state
+  if (loading) {
     return (
-      <div className="min-h-screen bg-[#f4f6f8] flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="w-11 h-11 bg-[#0e2a1c] text-white rounded-xl flex items-center justify-center">
-              <Leaf size={22} />
-            </span>
-            <div>
-              <p className="font-extrabold text-lg text-[#0e2a1c] leading-tight">OrganicHarvest</p>
-              <p className="text-[11px] text-gray-400">Admin Panel</p>
-            </div>
-          </div>
-          <h2 className="text-xl font-bold text-center text-gray-800 mb-6">Admin Login</h2>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Enter Admin Secret Key</label>
-              <input
-                type="password"
-                value={loginKey}
-                onChange={(e) => setLoginKey(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#245b3b]/30 focus:border-[#245b3b]"
-                placeholder="••••••••••••"
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-[#0e2a1c] text-white font-bold py-3 rounded-xl hover:bg-[#1a5c38] transition">
-              Login
-            </button>
-          </form>
-          <Link to="/" className="block text-center mt-4 text-sm text-gray-500 hover:text-[#245b3b]">
-            ← Back to Store
-          </Link>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0e2a1c]"></div>
       </div>
     );
   }
+
+  // 🆕 Security Check: Agar login nahi hai ya Admin nahi hai, toh bahar nikaal do
+  if (!user || user.role !== 'ADMIN') {
+    alert("Access Denied! You are not an Admin.");
+    return <Navigate to="/login" replace />;
+  }
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const isActive = (to) => to && location.pathname === to;
 
@@ -170,9 +135,12 @@ function AdminLayout({ children }) {
             </button>
 
             <div className="flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-full bg-[#0e2a1c] text-white text-xs font-bold flex items-center justify-center">SA</span>
+              {/* 🆕 Dynamic User Initials */}
+              <span className="w-9 h-9 rounded-full bg-[#0e2a1c] text-white text-xs font-bold flex items-center justify-center uppercase">
+                {user.name ? user.name.substring(0, 2) : 'AD'}
+              </span>
               <div className="hidden sm:block">
-                <p className="text-sm font-bold text-gray-800 leading-tight">Shreyash</p>
+                <p className="text-sm font-bold text-gray-800 leading-tight">{user.name || 'Admin'}</p>
                 <p className="text-[11px] text-gray-400">Admin</p>
               </div>
             </div>
