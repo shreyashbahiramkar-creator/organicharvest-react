@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../AdminLayout';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import api from '../../utils/api'; // 🆕 Axios instance import kiya
 
-const API = 'https://organicharvest-backend.onrender.com';
 const ITEMS_PER_PAGE = 7;
 
 const AdminOrders = ({ allProducts = [] }) => {
@@ -20,39 +20,42 @@ const AdminOrders = ({ allProducts = [] }) => {
   const [expandedId, setExpandedId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  /* Fetch Orders — 🔴 NEWEST FIRST (sabse last checkout = sabse upar) */
+  /* Fetch Orders — 🔴 NEWEST FIRST */
   useEffect(() => {
-    fetch(`${API}/api/orders`)
-      .then(res => res.json())
-      .then(data => {
-        const sorted = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const fetchOrders = async () => {
+      try {
+        const res = await api.get('/orders'); // 🆕 api use kiya
+        const sorted = [...res.data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setOrders(sorted);
-        setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error fetching orders:", err);
+        if (err.response?.status === 403 || err.response?.status === 401) {
+          alert("Unauthorized! Admin access required.");
+        }
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchOrders();
   }, []);
 
   /* Status Update */
   const updateOrderStatus = async (id, newStatus) => {
     try {
-      const res = await fetch(`${API}/api/orders/${id}/status?status=${newStatus}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (res.ok) {
+      const res = await api.put(`/orders/${id}/status?status=${newStatus}`); // 🆕 api use kiya
+      if (res.status === 200) {
         setOrders(prev => prev.map(o => (o.id === id ? { ...o, status: newStatus } : o)));
         if (selectedOrder && selectedOrder.id === id) {
           setSelectedOrder(prev => ({ ...prev, status: newStatus }));
         }
-      } else {
-        alert('Failed to update status');
       }
     } catch (error) {
       console.error(error);
-      alert('Server error!');
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        alert('Unauthorized! Admin access required.');
+      } else {
+        alert('Failed to update status');
+      }
     }
   };
 
@@ -65,7 +68,7 @@ const AdminOrders = ({ allProducts = [] }) => {
   const cancelledOrders = orders.filter(o => o.status === 'CANCELLED').length;
   const uniqueCustomers = new Set(orders.map(o => o.phone)).size;
 
-  /* Trend helper — last 7 days vs previous 7 days (real data) */
+  /* Trend helper */
   const trend = (reducer) => {
     const now = Date.now();
     const inRange = (o, from, to) => {
@@ -83,13 +86,13 @@ const AdminOrders = ({ allProducts = [] }) => {
   const customersTrend = trend((s, o) => s + (o.phone ? 1 : 0));
   const deliveredTrend = trend((s, o) => s + (o.status === 'DELIVERED' ? 1 : 0));
 
-  /* Product image lookup — productId se products list se image nikalo */
+  /* Product image lookup */
   const getProductImage = (productId) => {
     const p = allProducts.find((pr) => pr.id === productId);
     return p ? p.image : null;
   };
 
-  /* ═══ Chart Data — REAL (orders ko date ke hisaab se group kiya) ═══ */
+  /* ═══ Chart Data ═══ */
   const lineData = useMemo(() => {
     const byDate = {};
     orders.forEach((o) => {
@@ -118,7 +121,7 @@ const AdminOrders = ({ allProducts = [] }) => {
     { label: 'Cancelled', count: cancelledOrders, color: '#ef4444', Icon: XCircle },
   ];
 
-  /* Right panel — Recent Activity (latest top pe) */
+  /* Right panel — Recent Activity */
   const recentActivity = orders.slice(0, 5).map((o) => {
     const config = {
       DELIVERED: { Icon: CheckCircle2, color: 'text-green-600 bg-green-100', text: `Order #${o.orderNumber || o.id} marked as Delivered` },
@@ -610,7 +613,7 @@ const FragmentRow = ({ order, expanded, onToggle, onView, getProductImage }) => 
   </>
 );
 
-/* ═══ Helper Components (sirf EK baar defined) ═══ */
+/* ═══ Helper Components ═══ */
 const StatCard = ({ title, value, trend, icon, iconBg }) => (
   <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
     <div className="flex justify-between items-start mb-3">

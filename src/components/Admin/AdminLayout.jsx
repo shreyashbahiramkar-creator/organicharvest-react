@@ -1,88 +1,49 @@
-import { useState, useEffect } from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { Search, Bell, ChevronDown, Leaf, Menu } from 'lucide-react'; // Menu icon import kiya
+import { useState } from 'react';
+import { Outlet, Link, Navigate, useNavigate } from 'react-router-dom';
+import { Search, Bell, ChevronDown, Leaf, Menu } from 'lucide-react'; 
 import Sidebar from './Sidebar';
+import { useAuth } from '../../context/AuthContext'; // 🆕 AuthContext import kiya
 
 const AdminLayout = () => {
-  const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
+  // 🆕 AuthContext se user aur logout nikal rahe hain
+  const { user, logout, loading } = useAuth(); 
+  const navigate = useNavigate();
   
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginKey, setLoginKey] = useState('');
-  
-  // 🆕 Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    const adminStatus = localStorage.getItem('isAdmin');
-    if (adminStatus === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (loginKey === ADMIN_SECRET_KEY) {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAdmin', 'true');
-    } else {
-      alert('❌ Invalid Admin Key!');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
-    setIsAuthenticated(false);
-    window.location.href = '/';
-  };
-
-  if (!isAuthenticated) {
+  // 🆕 Agar loading ho raha hai toh wait karo
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-gray-100">
-          <div className="flex justify-center mb-6">
-            <div className="bg-green-100 p-4 rounded-full text-green-700">
-              <Leaf size={40} />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Admin Portal</h2>
-          <p className="text-center text-gray-500 text-sm mb-6">Enter your secret key to access the dashboard</p>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input 
-                type="password" 
-                value={loginKey} 
-                onChange={(e) => setLoginKey(e.target.value)} 
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
-                placeholder="••••••••••••" 
-                required
-              />
-            </div>
-            <button type="submit" className="w-full bg-green-700 text-white font-bold py-3 rounded-xl hover:bg-green-800 transition-colors">
-              Login to Dashboard
-            </button>
-          </form>
-          <Link to="/" className="block text-center mt-6 text-sm text-gray-500 hover:text-green-700 font-medium">
-            ← Back to Store
-          </Link>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
       </div>
     );
   }
+
+  // 🆕 Security Check: Agar user logged in nahi hai YA admin nahi hai, toh bahar nikaal do
+  if (!user || user.role !== 'ADMIN') {
+    alert("Access Denied! You are not an Admin.");
+    return <Navigate to="/login" replace />;
+  }
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex">
       {/* Sidebar with Mobile Props */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Main Content Area - ml-0 on mobile, ml-64 on desktop */}
+      {/* Main Content Area */}
       <div className="flex-1 ml-0 lg:ml-64 flex flex-col min-h-screen transition-all duration-300">
         
         {/* Topbar */}
         <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
           
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* 🆕 Hamburger Menu (Sirf mobile par dikhega) */}
+            {/* Hamburger Menu (Sirf mobile par dikhega) */}
             <button 
               onClick={() => setIsSidebarOpen(true)} 
               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
@@ -110,20 +71,37 @@ const AdminLayout = () => {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
 
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="w-10 h-10 bg-green-800 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
-                SA
+            {/* 🆕 User Profile Dropdown (Logout ke sath) */}
+            <div className="relative group">
+              <div className="flex items-center gap-3 cursor-pointer">
+                <div className="w-10 h-10 bg-green-800 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0 uppercase">
+                  {user.name ? user.name.substring(0, 2) : 'AD'}
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition-colors">
+                    {user.name || 'Admin'}
+                  </p>
+                  <p className="text-xs text-gray-500">Super Admin</p>
+                </div>
+                <ChevronDown size={16} className="text-gray-400 hidden md:block" />
               </div>
-              <div className="hidden md:block">
-                <p className="text-sm font-semibold text-gray-800 group-hover:text-green-700 transition-colors">Admin</p>
-                <p className="text-xs text-gray-500">Super Admin</p>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="p-2">
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
-              <ChevronDown size={16} className="text-gray-400 hidden md:block" />
             </div>
           </div>
         </header>
 
-        {/* Page Content - Padding adjusted for mobile */}
+        {/* Page Content */}
         <main className="p-4 md:p-8 flex-1 overflow-y-auto">
           <Outlet />
         </main>

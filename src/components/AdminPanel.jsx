@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
-
-const ADMIN_SECRET_KEY = 'OrganicHarvestAdmin123';
-const API = 'https://organicharvest-backend.onrender.com';
+import api from '../utils/api'; // 🆕 Axios instance import kiya
 
 function AdminPanel() {
   const [formData, setFormData] = useState({
@@ -18,9 +16,8 @@ function AdminPanel() {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch(`${API}/api/products`);
-      const data = await res.json();
-      setProducts(data);
+      const res = await api.get('/products'); // 🆕 api use kiya
+      setProducts(res.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -42,38 +39,30 @@ function AdminPanel() {
     setIsSubmitting(true);
     setMessage('');
 
-    const url = editingId
-      ? `${API}/api/products/${editingId}`
-      : `${API}/api/products`;
-    const method = editingId ? 'PUT' : 'POST';
+    const payload = {
+      ...formData,
+      price: parseFloat(formData.price),
+      originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
+      stock: parseInt(formData.stock) || 0
+    };
 
     try {
-      const res = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Key': ADMIN_SECRET_KEY
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : null,
-          stock: parseInt(formData.stock) || 0
-        }),
-      });
-
-      if (res.ok) {
-        setMessage(editingId ? '✅ Product updated successfully!' : '✅ Product added successfully!');
-        setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' });
-        setEditingId(null);
-        fetchProducts();
-      } else if (res.status === 401) {
-        setMessage('❌ Unauthorized! Invalid Admin Key.');
+      if (editingId) {
+        await api.put(`/products/${editingId}`, payload); // 🆕 api use kiya
+      } else {
+        await api.post('/products', payload); // 🆕 api use kiya
+      }
+      
+      setMessage(editingId ? '✅ Product updated successfully!' : '✅ Product added successfully!');
+      setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' });
+      setEditingId(null);
+      fetchProducts();
+    } catch (error) {
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        setMessage('❌ Unauthorized! Admin access required.');
       } else {
         setMessage('❌ Operation failed.');
       }
-    } catch (error) {
-      setMessage('❌ Server error!');
     } finally {
       setIsSubmitting(false);
     }
@@ -82,24 +71,18 @@ function AdminPanel() {
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka is product ko delete karna hai?')) return;
     try {
-      const res = await fetch(`${API}/api/products/${id}`, {
-        method: 'DELETE',
-        headers: { 'X-Admin-Key': ADMIN_SECRET_KEY }
-      });
-      if (res.ok) {
-        setProducts(prev => prev.filter(p => p.id !== id));
-        if (editingId === id) {
-          setEditingId(null);
-          setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' });
-        }
-      } else if (res.status === 401) {
-        alert('Unauthorized!');
+      await api.delete(`/products/${id}`); // 🆕 api use kiya
+      setProducts(prev => prev.filter(p => p.id !== id));
+      if (editingId === id) {
+        setEditingId(null);
+        setFormData({ name: '', category: '', price: '', originalPrice: '', unit: '', image: '', tag: '', stock: '' });
+      }
+    } catch (error) {
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        alert('Unauthorized! Admin access required.');
       } else {
         alert('Delete failed!');
       }
-    } catch (error) {
-      console.error(error);
-      alert('Server error!');
     }
   };
 
@@ -108,10 +91,7 @@ function AdminPanel() {
     setIsSubmitting(true);
     try {
       await Promise.all(products.map(async (product) => {
-        await fetch(`${API}/api/products/${product.id}`, {
-          method: 'DELETE',
-          headers: { 'X-Admin-Key': ADMIN_SECRET_KEY }
-        });
+        await api.delete(`/products/${product.id}`); // 🆕 api use kiya
       }));
       setProducts([]);
       alert('✅ Saare products successfully delete ho gaye!');
@@ -158,25 +138,20 @@ function AdminPanel() {
         setIsSubmitting(false);
         return;
       }
-      const res = await fetch(`${API}/api/products/bulk`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Key': ADMIN_SECRET_KEY
-        },
-        body: JSON.stringify(parsedData)
-      });
-      if (res.ok) {
-        alert('✅ Bulk products added successfully!');
-        setBulkData('');
-        fetchProducts();
-      } else if (res.status === 401) {
-        alert('❌ Unauthorized! Invalid Admin Key.');
+      
+      await api.post('/products/bulk', parsedData); // 🆕 api use kiya
+      
+      alert('✅ Bulk products added successfully!');
+      setBulkData('');
+      fetchProducts();
+    } catch (err) {
+      if (err.response?.status === 403 || err.response?.status === 401) {
+        alert('❌ Unauthorized! Admin access required.');
+      } else if (err instanceof SyntaxError) {
+        alert('❌ Invalid JSON format!');
       } else {
         alert('❌ Failed to add bulk products.');
       }
-    } catch (err) {
-      alert('❌ Invalid JSON format!');
     } finally {
       setIsSubmitting(false);
     }
