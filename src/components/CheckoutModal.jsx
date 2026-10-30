@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom'; 
+import { useAuth } from '../context/AuthContext'; 
+import api from '../utils/api'; 
+import { Link, useNavigate } from 'react-router-dom'; 
 
 function CheckoutModal() {
   const { cart, cartTotal, isCheckoutOpen, closeCheckout, clearCart, showToast } = useCart();
+  const { user } = useAuth(); 
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({ name: '', phone: '', address: '' });
   const [isOrdered, setIsOrdered] = useState(false);
@@ -16,18 +20,23 @@ function CheckoutModal() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!user) {
+      alert("Please login to place an order.");
+      closeCheckout();
+      navigate('/login');
+      return;
+    }
+
     setIsLoading(true);
 
-    // 🆕 Payload format
     const orderPayload = {
       customerName: formData.name,
       phone: formData.phone,
       address: formData.address,
       totalAmount: cartTotal, 
       items: cart.map(item => {
-        // ID ko split karo (Agar ID "222-500ml" hai toh sirf "222" bhejo)
         const originalProductId = item.id.toString().split('-')[0];
-        
         return {
           productId: Number(originalProductId), 
           productName: item.name,
@@ -37,25 +46,10 @@ function CheckoutModal() {
       })
     };
 
-    console.log("Sending Payload:", orderPayload);
-
     try {
-      const response = await fetch('https://organicharvest-backend.onrender.com/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      });
-
-      if (!response.ok) {
-        // Backend ka exact error message nikaalo
-        const errorText = await response.text();
-        console.error("Backend Error Response:", errorText);
-        throw new Error(`Server Error (${response.status}): ${errorText || 'Check console for details'}`);
-      }
-
-      const data = await response.json();
+      const response = await api.post('/orders', orderPayload);
+      const data = response.data;
       
-      // 🆕 Order successful hone ke baad hi cart clear karein
       setOrderId(data.orderNumber || data.id || 'ORD-' + Date.now()); 
       setIsOrdered(true);
       clearCart(); 
@@ -63,7 +57,8 @@ function CheckoutModal() {
 
     } catch (error) {
       console.error(error);
-      alert("❌ Error: " + error.message);
+      const errorMsg = error.response?.data?.message || error.message;
+      alert("❌ Error: " + errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -111,11 +106,11 @@ function CheckoutModal() {
             </div>
 
             <Link 
-              to={`/track-order?orderId=${orderId}`}
+              to="/orders"
               onClick={handleClose}
               className="w-full block bg-[#eaf0e5] text-[#245b3b] py-3 rounded-[10px] font-bold hover:bg-[#dce6d5] transition-colors mb-3 text-center"
             >
-              Track This Order
+              View My Orders
             </Link>
 
             <button onClick={handleClose} className="w-full bg-[#245b3b] text-white py-3 rounded-[10px] font-bold hover:bg-[#19452c] transition-colors">

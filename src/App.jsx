@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import api from './utils/api';
+
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ShopByCategory from './components/ShopByCategory';
@@ -11,24 +14,33 @@ import CheckoutModal from './components/CheckoutModal';
 import Toast from './components/Toast';
 import AdminPanel from './components/AdminPanel';
 import AdminOrders from './components/Admin/AdminOrders';
-import TrackOrder from './components/TrackOrder';
 import CartNotification from './components/CartNotification';
 import ScrollToTop from './components/ScrollToTop';
 import ProductPage from './components/ProductPage';
 
-function App() {
+import Login from './pages/Login';
+import Register from './pages/Register';
+import MyOrders from './pages/MyOrders';
+
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
+function AppContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { user } = useAuth();
 
   const location = useLocation();
-
-  // 🆕 Admin routes pe products load ka wait nahi karna
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
-  // Admin mode auto-reset on normal pages
   useEffect(() => {
     if (location.pathname !== '/admin' && location.pathname !== '/admin/orders') {
       localStorage.removeItem('isAdmin');
@@ -36,13 +48,9 @@ function App() {
   }, [location.pathname]);
 
   useEffect(() => {
-    fetch('https://organicharvest-backend.onrender.com/api/products')
+    api.get('/products')
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then(data => {
-        setProducts(data);
+        setProducts(res.data);
         setLoading(false);
       })
       .catch(err => {
@@ -55,23 +63,18 @@ function App() {
   const handleDelete = async (id) => {
     if (!window.confirm('Pakka delete karna hai?')) return;
     try {
-      const res = await fetch(`https://organicharvest-backend.onrender.com/api/products/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-Admin-Key': 'OrganicHarvestAdmin123'
-        }
-      });
-      if (res.ok) {
+      const res = await api.delete(`/products/${id}`);
+      if (res.status === 200 || res.status === 204) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
         alert('Product deleted successfully!');
-      } else if (res.status === 401) {
-        alert('Unauthorized! Aap Admin nahi hain.');
-      } else {
-        alert('Delete failed!');
       }
     } catch (error) {
       console.error(error);
-      alert('Server error!');
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        alert('Unauthorized! Sirf Admin delete kar sakta hai.');
+      } else {
+        alert('Delete failed!');
+      }
     }
   };
 
@@ -83,8 +86,7 @@ function App() {
     return matchesSearch && matchesCategory;
   });
 
-  // 🆕 Admin routes pe loading/error screen nahi dikhengi
-  if (loading && !isAdminRoute) {
+  if (loading && !isAdminRoute && !isAuthRoute) {
     return (
       <div className="min-h-screen bg-[#fffefa]">
         <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
@@ -108,7 +110,7 @@ function App() {
     );
   }
 
-  if (error && !isAdminRoute) {
+  if (error && !isAdminRoute && !isAuthRoute) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffefa] px-4">
         <div className="text-6xl mb-4">😕</div>
@@ -126,11 +128,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#fffefa] relative flex flex-col">
-      {!isAdminRoute && <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
+      {!isAdminRoute && !isAuthRoute && <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
 
       <div className="flex-grow">
         <Routes>
-          {/* Main Storefront Route */}
           <Route path="/" element={
             <>
               <Hero />
@@ -149,19 +150,22 @@ function App() {
             </>
           } />
 
-          {/* Separate Product Page Route */}
           <Route path="/product/:id" element={<ProductPage allProducts={products} />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <MyOrders />
+            </ProtectedRoute>
+          } />
 
-          {/* Admin Panel Routes */}
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/admin/orders" element={<AdminOrders allProducts={products} />} />
-
-          {/* Track Order Route */}
-          <Route path="/track-order" element={<TrackOrder />} />
         </Routes>
       </div>
 
-      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && !isAuthRoute && <Footer />}
 
       <ScrollToTop />
       <CartNotification />
@@ -169,6 +173,14 @@ function App() {
       <CheckoutModal />
       <Toast />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

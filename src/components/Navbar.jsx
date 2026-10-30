@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; 
+import { Link, useNavigate } from 'react-router-dom';
 import { SearchIcon } from './icons';
+import { User, LogOut, Package } from 'lucide-react'; 
 
 function Navbar({ searchQuery, setSearchQuery }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount, openCart } = useCart();
+  const { user, logout } = useAuth(); 
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/'); 
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-[#fffefa]/95 backdrop-blur border-b border-[#e6e8df]">
       <div className="max-w-[1200px] mx-auto px-4 md:px-6">
-
-        {/* ═══ ROW 1 : Logo | Links | Cart + Menu ═══ */}
         <div className="min-h-[60px] md:min-h-[68px] flex items-center justify-between gap-4">
-
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 text-[22px] md:text-[26px] font-extrabold tracking-tight">
             <span className="text-[26px] md:text-3xl text-[#245b3b] leading-none">✳</span>
             <span>
@@ -23,19 +29,20 @@ function Navbar({ searchQuery, setSearchQuery }) {
             </span>
           </Link>
 
-          {/* Desktop Links */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-[#26362b]">
             <Link to="/" className="hover:text-[#245b3b] transition-colors">Home</Link>
             <a href="/#categories" className="hover:text-[#245b3b] transition-colors">Categories</a>
             <a href="/#products" className="hover:text-[#245b3b] transition-colors">Shop</a>
             <a href="/#about" className="hover:text-[#245b3b] transition-colors">About</a>
             <a href="/#contact" className="hover:text-[#245b3b] transition-colors">Contact</a>
-            <Link to="/track-order" className="font-semibold text-[#245b3b] hover:text-[#1a452c] transition-colors border-l border-gray-300 pl-6">
-              Track Order
-            </Link>
+            
+            {user && (
+              <Link to="/orders" className="font-semibold text-[#245b3b] hover:text-[#1a452c] transition-colors border-l border-gray-300 pl-6 flex items-center gap-1.5">
+                <Package size={16} /> Orders
+              </Link>
+            )}
           </nav>
 
-          {/* Right : Cart + Hamburger */}
           <div className="flex items-center gap-4 md:gap-6">
             <button
               onClick={openCart}
@@ -46,6 +53,27 @@ function Navbar({ searchQuery, setSearchQuery }) {
                 {cartCount}
               </span>
             </button>
+
+            <div className="hidden md:flex items-center gap-4 border-l border-gray-300 pl-4">
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-[#245b3b] flex items-center gap-1">
+                    <User size={16} /> {user.name.split(' ')[0]}
+                  </span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-gray-500 hover:text-red-500 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                  </button>
+                </div>
+              ) : (
+                <Link to="/login" className="text-sm font-bold text-[#245b3b] hover:text-[#1a452c] transition-colors">
+                  Login
+                </Link>
+              )}
+            </div>
 
             <button
               className="md:hidden flex flex-col gap-[5px] p-1"
@@ -59,7 +87,6 @@ function Navbar({ searchQuery, setSearchQuery }) {
           </div>
         </div>
 
-        {/* ═══ ROW 2 : Full-width Search Bar ═══ */}
         <div className="pb-3">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -74,7 +101,6 @@ function Navbar({ searchQuery, setSearchQuery }) {
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-[#e6e8df] px-4 py-4 flex flex-col gap-4 shadow-md absolute w-full">
           <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Home</Link>
@@ -82,7 +108,23 @@ function Navbar({ searchQuery, setSearchQuery }) {
           <a href="/#products" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Shop</a>
           <a href="/#about" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">About</a>
           <a href="/#contact" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Contact</a>
-          <Link to="/track-order" onClick={() => setIsMenuOpen(false)} className="text-[#245b3b] font-bold pb-2">Track Order</Link>
+          
+          <div className="border-t border-gray-100 pt-2 flex flex-col gap-4">
+            {user ? (
+              <>
+                <Link to="/orders" onClick={() => setIsMenuOpen(false)} className="text-[#245b3b] font-bold flex items-center gap-2">
+                  <Package size={18} /> My Orders
+                </Link>
+                <button onClick={handleLogout} className="text-red-500 font-medium text-left flex items-center gap-2">
+                  <LogOut size={18} /> Logout ({user.name.split(' ')[0]})
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setIsMenuOpen(false)} className="text-[#245b3b] font-bold flex items-center gap-2">
+                <User size={18} /> Login / Register
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </header>
