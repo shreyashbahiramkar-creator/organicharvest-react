@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingBag, Package, Users, FolderTree, Boxes,
   BarChart3, Megaphone, Settings, Search, Bell, LogOut, Store, Leaf
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; // 🆕 AuthContext import kiya
+import { useAuth } from '../context/AuthContext'; // 🆕 AuthContext import kiya
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/admin/orders' },
