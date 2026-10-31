@@ -207,12 +207,26 @@ export default function MyOrders() {
                     {order.items?.map((item, index) => (
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-14 h-14 md:w-16 md:h-16 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                          {/* Agar backend se image aa rahi hai toh wo dikhegi, warna icon */}
-                          {item.imageUrl || item.image ? (
-                            <img src={item.imageUrl || item.image} alt={item.productName} className="w-full h-full object-cover" />
-                          ) : (
-                            <Package size={24} className="text-gray-400" />
-                          )}
+                          
+                          {/* 🔥 YAHAN item.productImage ADD KAR DIYA HAI */}
+                          {item.productImage || item.imageUrl || item.image ? (
+                            <img 
+                              src={item.productImage || item.imageUrl || item.image} 
+                              alt={item.productName} 
+                              className="w-full h-full object-cover" 
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                              }}
+                            />
+                          ) : null}
+                          
+                          {/* Fallback Icon */}
+                          <Package 
+                            size={24} 
+                            className="text-gray-400" 
+                            style={{ display: (item.productImage || item.imageUrl || item.image) ? 'none' : 'block' }} 
+                          />
                         </div>
                         <div className="flex-1">
                           <p className="font-bold text-[#26362b] text-sm md:text-base line-clamp-1">{item.productName}</p>
