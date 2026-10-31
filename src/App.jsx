@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'; // useLayoutEffect import kiya
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './utils/api';
@@ -41,12 +41,19 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
 
-  // 1. NAYA PAGE KHULNE PAR TOP SE OPEN HONE KA FIX
+  // 1. BROWSER KI SCROLL RESTORATION BAND KAREIN
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  // 2. NAYA PAGE KHULNE PAR TOP SE OPEN HONE KA FIX (useLayoutEffect)
+  useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // 2. SEARCH KARNE PAR PRODUCT TAK SCROLL HONE KE LIYE REF
+  // 3. SEARCH KARNE PAR PRODUCT TAK SCROLL HONE KE LIYE REF
   const productsRef = useRef(null);
   const scrollToProducts = () => {
     if (productsRef.current) {
@@ -155,7 +162,6 @@ function AppContent() {
             <>
               <Hero />
               
-              {/* ID ADD KI HAI */}
               <div id="categories">
                 <ShopByCategory
                   selectedCategory={selectedCategory}
@@ -163,7 +169,6 @@ function AppContent() {
                 />
               </div>
 
-              {/* ID ADD KI HAI */}
               <div id="products" ref={productsRef}>
                 <Products
                   filteredProducts={filteredProducts}
@@ -174,7 +179,6 @@ function AppContent() {
                 />
               </div>
 
-              {/* ID ADD KI HAI */}
               <div id="contact">
                 <Contact />
               </div>
