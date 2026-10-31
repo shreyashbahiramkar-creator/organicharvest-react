@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import api from './utils/api';
@@ -15,7 +15,7 @@ import Toast from './components/Toast';
 import AdminPanel from './components/AdminPanel';
 import AdminOrders from './components/Admin/AdminOrders';
 import CartNotification from './components/CartNotification';
-import ScrollToTop from './components/ScrollToTop';
+import ScrollToTop from './components/ScrollToTop'; 
 import ProductPage from './components/ProductPage';
 
 import Login from './pages/Login';
@@ -40,6 +40,19 @@ function AppContent() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+
+  // 1. NAYA PAGE KHULNE PAR TOP SE OPEN HONE KA FIX
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // 2. SEARCH KARNE PAR PRODUCT TAK SCROLL HONE KE LIYE REF
+  const productsRef = useRef(null);
+  const scrollToProducts = () => {
+    if (productsRef.current) {
+      productsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   useEffect(() => {
     if (location.pathname !== '/admin' && location.pathname !== '/admin/orders') {
@@ -128,25 +141,43 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-[#fffefa] relative flex flex-col">
-      {!isAdminRoute && !isAuthRoute && <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
+      {!isAdminRoute && !isAuthRoute && (
+        <Navbar 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+          scrollToProducts={scrollToProducts} 
+        />
+      )}
 
       <div className="flex-grow">
         <Routes>
           <Route path="/" element={
             <>
               <Hero />
-              <ShopByCategory
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-              />
-              <Products
-                filteredProducts={filteredProducts}
-                allProducts={products}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                onDelete={handleDelete}
-              />
-              <Contact />
+              
+              {/* ID ADD KI HAI */}
+              <div id="categories">
+                <ShopByCategory
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                />
+              </div>
+
+              {/* ID ADD KI HAI */}
+              <div id="products" ref={productsRef}>
+                <Products
+                  filteredProducts={filteredProducts}
+                  allProducts={products}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  onDelete={handleDelete}
+                />
+              </div>
+
+              {/* ID ADD KI HAI */}
+              <div id="contact">
+                <Contact />
+              </div>
             </>
           } />
 

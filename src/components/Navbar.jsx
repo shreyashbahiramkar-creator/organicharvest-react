@@ -1,20 +1,45 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext'; 
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // useLocation add kiya
 import { SearchIcon } from './icons';
 import { User, LogOut, Package } from 'lucide-react'; 
 
-function Navbar({ searchQuery, setSearchQuery }) {
+// scrollToProducts prop add kiya
+function Navbar({ searchQuery, setSearchQuery, scrollToProducts }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartCount, openCart } = useCart();
   const { user, logout } = useAuth(); 
   const navigate = useNavigate();
+  const location = useLocation(); // location add kiya
 
   const handleLogout = () => {
     logout();
     navigate('/'); 
     setIsMenuOpen(false);
+  };
+
+  // 1. SEARCH KARNE PAR ENTER DABANE KA FIX
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // Page reload hone se rokega
+    if (scrollToProducts) {
+      scrollToProducts(); // Products tak scroll karega
+    }
+  };
+
+  // 2. FOOTER PE JUMP HONE WALE LINKS KA FIX
+  const handleNavClick = (e, sectionId) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -31,10 +56,12 @@ function Navbar({ searchQuery, setSearchQuery }) {
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-[#26362b]">
             <Link to="/" className="hover:text-[#245b3b] transition-colors">Home</Link>
-            <a href="/#categories" className="hover:text-[#245b3b] transition-colors">Categories</a>
-            <a href="/#products" className="hover:text-[#245b3b] transition-colors">Shop</a>
-            <a href="/#about" className="hover:text-[#245b3b] transition-colors">About</a>
-            <a href="/#contact" className="hover:text-[#245b3b] transition-colors">Contact</a>
+            
+            {/* <a href="/#..."> ki jagah <button> use kiya taki footer pe jump na ho */}
+            <button onClick={(e) => handleNavClick(e, 'categories')} className="hover:text-[#245b3b] transition-colors">Categories</button>
+            <button onClick={(e) => handleNavClick(e, 'products')} className="hover:text-[#245b3b] transition-colors">Shop</button>
+            <button onClick={(e) => handleNavClick(e, 'about')} className="hover:text-[#245b3b] transition-colors">About</button>
+            <button onClick={(e) => handleNavClick(e, 'contact')} className="hover:text-[#245b3b] transition-colors">Contact</button>
             
             {user && (
               <Link to="/orders" className="font-semibold text-[#245b3b] hover:text-[#1a452c] transition-colors border-l border-gray-300 pl-6 flex items-center gap-1.5">
@@ -87,8 +114,9 @@ function Navbar({ searchQuery, setSearchQuery }) {
           </div>
         </div>
 
+        {/* Search Bar ko <form> mein wrap kiya taki Enter kaam kare */}
         <div className="pb-3">
-          <div className="relative">
+          <form onSubmit={handleSearchSubmit} className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             <input
               type="text"
@@ -97,17 +125,19 @@ function Navbar({ searchQuery, setSearchQuery }) {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-2.5 md:py-3 text-sm bg-[#f3f5ee] border border-transparent rounded-xl outline-none transition-all placeholder:text-gray-400 focus:bg-white focus:border-[#245b3b]/30 focus:shadow-sm"
             />
-          </div>
+          </form>
         </div>
       </div>
 
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-[#e6e8df] px-4 py-4 flex flex-col gap-4 shadow-md absolute w-full">
           <Link to="/" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Home</Link>
-          <a href="/#categories" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Categories</a>
-          <a href="/#products" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Shop</a>
-          <a href="/#about" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">About</a>
-          <a href="/#contact" onClick={() => setIsMenuOpen(false)} className="text-[#26362b] font-medium border-b border-gray-100 pb-2">Contact</a>
+          
+          {/* Mobile menu mein bhi button use kiya */}
+          <button onClick={(e) => handleNavClick(e, 'categories')} className="text-left text-[#26362b] font-medium border-b border-gray-100 pb-2">Categories</button>
+          <button onClick={(e) => handleNavClick(e, 'products')} className="text-left text-[#26362b] font-medium border-b border-gray-100 pb-2">Shop</button>
+          <button onClick={(e) => handleNavClick(e, 'about')} className="text-left text-[#26362b] font-medium border-b border-gray-100 pb-2">About</button>
+          <button onClick={(e) => handleNavClick(e, 'contact')} className="text-left text-[#26362b] font-medium border-b border-gray-100 pb-2">Contact</button>
           
           <div className="border-t border-gray-100 pt-2 flex flex-col gap-4">
             {user ? (
