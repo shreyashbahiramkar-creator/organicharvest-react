@@ -35,7 +35,7 @@ function CheckoutModal() {
           quantity: item.quantity
         };
       }),
-      ...paymentDetails // Payment details merge kar rahe hain (agar hain toh)
+      ...paymentDetails 
     };
 
     try {
@@ -69,21 +69,21 @@ function CheckoutModal() {
     setIsLoading(true);
 
     if (paymentMethod === 'COD') {
-      // Agar COD hai toh direct save karo
       await saveOrderToDatabase();
     } else {
-      // Agar ONLINE hai toh Razorpay kholo
+      // ONLINE Payment (Razorpay)
       try {
         // 1. Backend se Razorpay Order ID generate karwayein
         const { data } = await api.post('/api/payment/create-order', {
           amount: cartTotal
         });
 
-        const razorpayOrder = JSON.parse(data);
+        // 🆕 FIX: Backend ab JSON object bhej raha hai, isliye JSON.parse hataya
+        const razorpayOrder = data; 
 
         // 2. Razorpay Checkout Options
         const options = {
-          key: "rzp_test_TuTX6mOGC8g95q", // 🔥 Aapki Test Key ID
+          key: razorpayOrder.key, // 🆕 Backend se aayi hui Test Key
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
           name: "Organic Harvest",
@@ -107,7 +107,7 @@ function CheckoutModal() {
           },
           modal: {
             ondismiss: function() {
-              setIsLoading(false); // Agar user popup band kar de toh loading stop ho jaye
+              setIsLoading(false); 
             }
           }
         };
@@ -116,7 +116,7 @@ function CheckoutModal() {
         rzp.open();
 
       } catch (error) {
-        console.error(error);
+        console.error("Razorpay Error:", error);
         alert("Payment initialization failed. Try again.");
         setIsLoading(false);
       }
@@ -128,7 +128,7 @@ function CheckoutModal() {
     setTimeout(() => {
       setIsOrdered(false);
       setFormData({ name: '', phone: '', address: '' });
-      setPaymentMethod('COD'); // Reset payment method
+      setPaymentMethod('COD'); 
     }, 300);
   };
 
@@ -197,7 +197,7 @@ function CheckoutModal() {
                 <textarea name="address" required rows="3" value={formData.address} onChange={handleChange} placeholder="House no, Street, Area" className="w-full px-3 py-2.5 border border-[#e6e8df] rounded-lg outline-none focus:border-[#245b3b] resize-none"></textarea>
               </div>
 
-              {/* 🔥 NAYA PAYMENT METHOD SECTION */}
+              {/* 🔥 PAYMENT METHOD SECTION */}
               <div>
                 <label className="block text-sm font-semibold mb-2">Payment Method</label>
                 <div className="space-y-2">
