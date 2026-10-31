@@ -48,7 +48,11 @@ function ProductPage({ allProducts }) {
   const [selectedVariant, setSelectedVariant] = useState(variants[1] || variants[0]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // 🔥 YEH NAYA CODE HAI: Turant top pe jump karne ke liye
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
     const newVariants = generateVariants();
     setSelectedVariant(newVariants[1] || newVariants[0]);
   }, [id]);

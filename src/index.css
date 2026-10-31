@@ -7,9 +7,7 @@
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* ❌ html { scroll-behavior: smooth; } — YEH HATA DIYA HAI */
 
 @keyframes popIn {
   0% {
