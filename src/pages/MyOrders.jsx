@@ -48,57 +48,6 @@ export default function MyOrders() {
     return order.status?.toUpperCase() === activeTab.toUpperCase();
   });
 
-  // Tracking Timeline Component (Dynamic based on status)
-  const TrackingTimeline = ({ status }) => {
-    const steps = [
-      { key: 'PENDING', label: 'Order Placed' },
-      { key: 'PROCESSING', label: 'Processing' },
-      { key: 'SHIPPED', label: 'Shipped' },
-      { key: 'DELIVERED', label: 'Delivered' }
-    ];
-
-    const currentStatus = status?.toUpperCase() || 'PENDING';
-    const currentIndex = steps.findIndex(s => s.key === currentStatus);
-
-    if (currentStatus === 'CANCELLED') {
-      return (
-        <div className="flex items-center justify-center h-full bg-red-50 rounded-xl border border-red-100 p-4">
-          <p className="text-red-600 font-bold flex items-center gap-2"><XCircle size={20} /> This order was cancelled.</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="relative flex items-center justify-between w-full mt-4 md:mt-0">
-        {/* Background Line */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 -z-10 rounded-full"></div>
-        {/* Active Progress Line */}
-        <div 
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#245b3b] -z-10 rounded-full transition-all duration-500" 
-          style={{ width: `${currentIndex !== -1 ? (currentIndex / (steps.length - 1)) * 100 : 0}%` }}
-        ></div>
-        
-        {steps.map((step, idx) => {
-          const isCompleted = idx <= currentIndex;
-          const isCurrent = idx === currentIndex;
-
-          return (
-            <div key={step.key} className="flex flex-col items-center relative z-10 w-1/4">
-              <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 mb-2 bg-white transition-colors duration-300 ${
-                isCompleted ? 'border-[#245b3b] text-[#245b3b]' : 'border-gray-300 text-gray-300'
-              } ${isCurrent ? 'ring-4 ring-[#eaf0e5]' : ''}`}>
-                {isCompleted ? <CheckCircle size={14} className="md:w-4 md:h-4" /> : <div className="w-2 h-2 rounded-full bg-gray-300"></div>}
-              </div>
-              <p className={`text-[9px] md:text-[11px] font-bold text-center leading-tight ${isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
-                {step.label}
-              </p>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fffefa]">
@@ -199,16 +148,13 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                {/* Body: Items & Timeline */}
-                <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Left: Items */}
+                {/* Body: Items (Full Width) */}
+                <div className="p-4 md:p-6">
                   <div className="space-y-4">
                     {order.items?.map((item, index) => (
                       <div key={index} className="flex items-center gap-4">
                         <div className="w-14 h-14 md:w-16 md:h-16 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           
-                          {/* 🔥 YAHAN item.productImage ADD KAR DIYA HAI */}
                           {item.productImage || item.imageUrl || item.image ? (
                             <img 
                               src={item.productImage || item.imageUrl || item.image} 
@@ -221,7 +167,6 @@ export default function MyOrders() {
                             />
                           ) : null}
                           
-                          {/* Fallback Icon */}
                           <Package 
                             size={24} 
                             className="text-gray-400" 
@@ -238,12 +183,6 @@ export default function MyOrders() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Right: Tracking Timeline */}
-                  <div className="flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-gray-100 pt-6 lg:pt-0 lg:pl-6">
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center lg:text-left">Order Status</h4>
-                    <TrackingTimeline status={order.status} />
-                  </div>
                 </div>
 
                 {/* Footer */}
@@ -257,11 +196,6 @@ export default function MyOrders() {
                     <button className="flex-1 md:flex-none flex items-center justify-center gap-2 border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-gray-50 transition-colors">
                       <Eye size={16} /> View Details
                     </button>
-                    {(order.status?.toUpperCase() === 'SHIPPED' || order.status?.toUpperCase() === 'PROCESSING') && (
-                      <button className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[#245b3b] text-white px-4 py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-[#1a452c] transition-colors">
-                        Track Order <ArrowRight size={16} />
-                      </button>
-                    )}
                   </div>
                 </div>
 
