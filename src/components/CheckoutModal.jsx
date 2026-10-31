@@ -10,6 +10,7 @@ function CheckoutModal() {
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({ name: '', phone: '', address: '' });
+  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' ya 'ONLINE'
   const [isOrdered, setIsOrdered] = useState(false);
   const [orderId, setOrderId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,18 +19,8 @@ function CheckoutModal() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!user) {
-      alert("Please login to place an order.");
-      closeCheckout();
-      navigate('/login');
-      return;
-    }
-
-    setIsLoading(true);
-
+  // 🔥 Order Database mein save karne ka common function
+  const saveOrderToDatabase = async (paymentDetails = {}) => {
     const orderPayload = {
       customerName: formData.name,
       phone: formData.phone,
@@ -43,7 +34,8 @@ function CheckoutModal() {
           price: item.price,
           quantity: item.quantity
         };
-      })
+      }),
+      ...paymentDetails // Payment details merge kar rahe hain (agar hain toh)
     };
 
     try {
@@ -54,13 +46,80 @@ function CheckoutModal() {
       setIsOrdered(true);
       clearCart(); 
       showToast("Order placed successfully!");
-
     } catch (error) {
       console.error(error);
       const errorMsg = error.response?.data?.message || error.message;
-      alert("❌ Error: " + errorMsg);
+      alert("❌ Order Error: " + errorMsg);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 🔥 Main Submit Handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      alert("Please login to place an order.");
+      closeCheckout();
+      navigate('/login');
+      return;
+    }
+
+    setIsLoading(true);
+
+    if (paymentMethod === 'COD') {
+      // Agar COD hai toh direct save karo
+      await saveOrderToDatabase();
+    } else {
+      // Agar ONLINE hai toh Razorpay kholo
+      try {
+        // 1. Backend se Razorpay Order ID generate karwayein
+        const { data } = await api.post('/api/payment/create-order', {
+          amount: cartTotal
+        });
+
+        const razorpayOrder = JSON.parse(data);
+
+        // 2. Razorpay Checkout Options
+        const options = {
+          key: "rzp_test_TuTX6mOGC8g95q", // 🔥 Aapki Test Key ID
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: "Organic Harvest",
+          description: "Fresh Groceries Order",
+          order_id: razorpayOrder.id, 
+          handler: async function (response) {
+            // 3. Payment Success! Ab order database mein save karein
+            await saveOrderToDatabase({
+              paymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
+              paymentStatus: 'PAID'
+            });
+          },
+          prefill: {
+            name: formData.name,
+            contact: formData.phone,
+          },
+          theme: {
+            color: "#245b3b",
+          },
+          modal: {
+            ondismiss: function() {
+              setIsLoading(false); // Agar user popup band kar de toh loading stop ho jaye
+            }
+          }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+      } catch (error) {
+        console.error(error);
+        alert("Payment initialization failed. Try again.");
+        setIsLoading(false);
+      }
     }
   };
 
@@ -69,6 +128,7 @@ function CheckoutModal() {
     setTimeout(() => {
       setIsOrdered(false);
       setFormData({ name: '', phone: '', address: '' });
+      setPaymentMethod('COD'); // Reset payment method
     }, 300);
   };
 
@@ -100,7 +160,7 @@ function CheckoutModal() {
                 <strong className="text-[#26362b] text-right max-w-[60%]">{formData.address}</strong>
               </div>
               <div className="flex justify-between border-t border-[#e6e8df] pt-2 mt-2">
-                <span className="text-[#737b72]">Total (COD):</span>
+                <span className="text-[#737b72]">Total ({paymentMethod === 'COD' ? 'COD' : 'Paid Online'}):</span>
                 <strong className="text-[#245b3b] text-base">₹{cartTotal}</strong>
               </div>
             </div>
@@ -137,11 +197,38 @@ function CheckoutModal() {
                 <textarea name="address" required rows="3" value={formData.address} onChange={handleChange} placeholder="House no, Street, Area" className="w-full px-3 py-2.5 border border-[#e6e8df] rounded-lg outline-none focus:border-[#245b3b] resize-none"></textarea>
               </div>
 
+              {/* 🔥 NAYA PAYMENT METHOD SECTION */}
               <div>
-                <label className="block text-sm font-semibold mb-1">Payment Method</label>
-                <div className="flex items-center gap-3 p-3 border border-[#e6e8df] rounded-lg bg-[#f6f6f0]">
-                  <input type="radio" checked readOnly className="accent-[#245b3b]" />
-                  <span className="text-sm font-medium">Cash on Delivery (COD)</span>
+                <label className="block text-sm font-semibold mb-2">Payment Method</label>
+                <div className="space-y-2">
+                  {/* COD Option */}
+                  <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-[#245b3b] bg-[#eaf0e5]' : 'border-[#e6e8df] bg-white hover:bg-gray-50'}`}>
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="COD" 
+                      checked={paymentMethod === 'COD'} 
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="accent-[#245b3b] w-4 h-4" 
+                    />
+                    <span className="text-sm font-medium">Cash on Delivery (COD)</span>
+                  </label>
+
+                  {/* Online Payment Option */}
+                  <label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'ONLINE' ? 'border-[#245b3b] bg-[#eaf0e5]' : 'border-[#e6e8df] bg-white hover:bg-gray-50'}`}>
+                    <input 
+                      type="radio" 
+                      name="paymentMethod" 
+                      value="ONLINE" 
+                      checked={paymentMethod === 'ONLINE'} 
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="accent-[#245b3b] w-4 h-4" 
+                    />
+                    <span className="text-sm font-medium flex items-center gap-2">
+                      Pay Online (UPI / Card) 
+                      <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">Secure</span>
+                    </span>
+                  </label>
                 </div>
               </div>
 
@@ -152,9 +239,18 @@ function CheckoutModal() {
               <button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#245b3b] text-white py-3 rounded-[10px] font-bold hover:bg-[#19452c] transition-colors disabled:opacity-50"
+                className="w-full bg-[#245b3b] text-white py-3 rounded-[10px] font-bold hover:bg-[#19452c] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? 'Placing Order...' : 'Place Order'}
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </>
+                ) : paymentMethod === 'COD' ? (
+                  'Place Order (COD)'
+                ) : (
+                  `Pay ₹${cartTotal}`
+                )}
               </button>
             </form>
           </>
